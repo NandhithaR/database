@@ -1,0 +1,15 @@
+saleid|itemid|customerid|storeid|time|qty|pricerange
+45|133|2|63|49|23|outrageous
+658|75|2|89|46|43|outrageous
+149|103|2|23|67|2|cheap
+398|82|2|41|3|27|outrageous
+147|81|2|4|92|11|outrageous
+778|75|160|72|67|17|supercheap
+829|112|2|70|63|43|supercheap
+101|105|2|9|74|28|expensive
+940|62|2|90|67|39|outrageous
+864|119|12|38|67|49|outrageous
+288|46|2|95|67|26|outrageous
+875|83|59|56|59|20|outrageous
+783|86|180|29|67|46|outrageous
+289|16|2|95|92|2|cheap

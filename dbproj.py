@@ -51,23 +51,51 @@ def projection(filename,*colname):
 	d=[]
 	for i in colname:
 		h.append(i)
+		d.append(data[i])
+	t_matrix = zip(*d)
 	#print(d)
+	# for row in t_matrix:
+	# 	print(row)
 	# tabulate data
-	table = tabulate(d, h, tablefmt="fancy_grid")
+	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	# output
-	#print(table)
+	return table
 # def readQuery(query):
 
 # def select(filename,query):
 # 	head,data=importfile(filename)
 # 	cond = readQuery(query)
+def convertQuery(*arg):
+	head,data=importfile(filename)
+
 def select(filename,*arg):
 	head,data=importfile(filename)
-	test_cols = data[['qty', 'time']]
-	test_vals = np.array(('a1v1', 'a4v1'), test_cols.dtype)
-	print(data[test_cols == test_vals])
 
+	#b=np.where(data['qty']==2)
+	a=convertQuery(filename,*arg)
+	b=np.logical_or( data['qty'] == 2, data['qty'] == 23 )
+	h=[]
+	d=[]
+	for i in head:
+		h.append(i)
+	#print(h)
+	# t_matrix = zip(*b)
+	# for row in t_matrix:
+	# 	print(row)
+	table = tabulate(data[b], h, tablefmt="fancy_grid")
+	#print(data[b])
+	print(table)
 
+def concateCols(filename,*colname):
+	head,data=importfile(filename)
+	h=[]
+	d=[]
+	for i in head:
+		h.append(i)
+
+def getGroupBy(filename,*colname):
+	head,data=importfile(filename)
+	np.groupby()
 
 #sumgroup, avggroup, moving avg, moving sum, group by, join
 
@@ -78,8 +106,8 @@ if __name__ == "__main__":
    # print(data)
    sortColumns('sampledata.txt','qty')
    getAverage('sampledata.txt','qty')
-   projection('sampledata.txt','qty','saleid')
-   getSum('sampledata.txt','qttiy')
+   projection('sampledata.txt','qty','saleid','itemid')
+   getSum('sampledata.txt','qty')
    select('sampledata.txt','qty=5')
 
 

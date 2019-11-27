@@ -1,9 +1,22 @@
 import numpy as np
 from tabulate import tabulate
 import numpy.lib.recfunctions as rfn
-from operator import itemgetter
-from itertools import groupby
+# from operator import itemgetter
+# from itertools import groupby
 from collections import defaultdict
+# from BTrees.OOBTree import OOBTree
+import re
+
+hashmap={}
+# btree = OOBTree()
+collection=[]
+def Hash(data,colname):
+	if key in hashmap:
+		collection[hashmap[key]]['value'] = value
+	else:
+		collection = np.append(collection, np.array([(key,value)], dtype=collection.dtype))
+		hashmap[key] = len(collection) - 1 
+# def Btree(data,colname):
 
 
 #check if string can be converted to float
@@ -19,7 +32,7 @@ def importfile(filename):
 	#headers=[file_array.dtype.names,file_array.dtype]
 	dtypes=[file_array.dtype]
 	headers=[file_array.dtype.names]
-	return headers,file_array
+	return file_array
 	
 
 def exportfile():
@@ -37,8 +50,9 @@ def sortColumns(filename,colname):
 	data.sort(order=colname)
 	return data
 
-def projection(filename,*colname):
-	head,data=importfile(filename)
+def projection(table_name,*colname):
+	#head,data=importfile(filename)
+	data=table_name
 	h=[]
 	d=[]
 	for i in colname:
@@ -48,12 +62,14 @@ def projection(filename,*colname):
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	return table
 
-def select(filename,*arg):
-	head,data=importfile(filename)
-	s=data[data['qty']==2]
-	for i in range(len(s)):
-		s[i][5]=s[i][5]+5
-	return data[(data['itemid']>75) | (data['qty']>2)]
+##### to do ######
+def select(table_name,*arg):
+	data=table_name
+	print(arg)
+	# s=data[data['qty']==2]
+	# for i in range(len(s)):
+	# 	s[i][5]=s[i][5]+5
+	# return data[(data['itemid']>75) | (data['qty']>2)]
 
 #selection, projection, count, sum and avg aggregates
 def getAverage(filename,colname):
@@ -107,38 +123,6 @@ def sumGroup(filename, *colname):
 	np.add.at(totals, inv_ij, data[h[0]])
 	return totals
 
-def geteJoin(filename1,filename2,*cols):
-	head1,data1=importfile(filename1)
-	head2,data2=importfile(filename2)
-	a1=data1[cols[0]]
-	a2=data2[cols[1]]
-	arrays=np.where(data1['qty']==data2['Q'],a1,a2)
-	print(arrays)
-	# ans=np.concatenate((a1, a2), axis=0)
-	
-
-# def join_struct_arrays(filename1,filename2, *cond):
-# 	head1,data1=importfile(filename1)
-# 	head2,data2=importfile(filename2)
-# 	a1=np.array([data1])
-# 	a2=np.array([data2])
-# 	arrays=[]
-# 	for i in range(len(data1)):
-# 		arrays.append(data1[i])
-# 	for i in range(len(data2)):
-# 		arrays.append(data2[i])
-# 	print(arrays['itemid'])
-# 	#print(arrays[(data1['itemid']>75) | (data1['qty']>2)])
-
-
-# def fields_view(arr, fields):
-#     dtype2 = np.dtype({name:arr.dtype.fields[name] for name in fields})
-#     return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
-
-def convertQuery(*arg):
-	head,data=importfile(filename)
-
-
 def concateCols(filename,*colname):
 	head,data=importfile(filename)
 	h=[]
@@ -154,22 +138,95 @@ def getGroupBy(filename,*colname):
 
 
 if __name__ == "__main__":
-   head,data=importfile('sampledata.txt')
-#    print(head)
-#    print(head)
-#    print(data)
-   sortColumns('sampledata.txt','qty')
-   getAverage('sampledata.txt','qty')
-   projection('sampledata.txt','qty','saleid','itemid')
-   getSum('sampledata.txt','qty')
-   select('sampledata.txt','qty=5')
-   #join('sampledata.txt','datasample.txt', '(R1.qty > S.Q)', '(R1.saleid = S.saleid)')
-#    a1 = np.array([(1, 2), (3, 4), (5, 6)], dtype=[('x', int), ('y', int)])
-#    a2 = np.array([(7,10), (8,11), (1,2)], dtype=[('z', int), ('w', float)])
-#   join_struct_arrays('sampledata.txt','datasample.txt', '(R1.qty > S.Q)', '(R1.saleid = S.saleid)')
-   sumGroup('sampledata.txt','qty','pricerange')
-#    avgGroup('sampledata.txt','qty','time','pricerange')
-   moving_average('sampledata.txt','qty',3)
-   moving_sum('sampledata.txt','qty',3)
-   geteJoin('sampledata.txt','datasample.txt','qty','Q')
-  
+	table={}
+	st = ""
+	print("Enter quit to exit")
+	while(st!="quit"):
+		st = raw_input()
+		params=st.split(" ")
+		#call function
+		if(st.find("inputfromfile")!=-1):
+			p = params[2]
+			filename = p[p.find('(')+1:p.find(')')]+".txt"
+			d=importfile(filename)
+			table[params[0]]=d
+			print(table)
+		elif(st.find("select")!=-1):
+			p = params[2]
+			#only one condition
+			# print(table[p[p.find('(')+1:].strip(',')])
+			#more than one condition
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			conditions = params[3:]
+			d=select(table_name,conditions)
+			table[params[0]]=d
+		elif(st.find("project")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			column_names = params[3:]
+			d=projection(table_name,column_names)
+			table[params[0]]=d
+		elif(st.find("avg")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			column = params[3]
+			d=getAverage(table_name,column)
+			table[params[0]]=d
+		elif(st.find("sumgroup")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			args = params[3:]
+			d=sumGroup(table_name,args)
+			table[params[0]]=d
+		elif(st.find("avggroup")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			args = params[3:]
+			d=avgGroup(table_name,args)
+			table[params[0]]=d
+		elif(st.find("movavg")!=-1):
+			length = len(params)
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			args = params[3:length-1]
+			val = params[length-1]
+			d=moving_average(table_name,args,val)
+			table[params[0]]=d
+		elif(st.find("movsum")!=-1):
+			length = len(params)
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			args = params[3:length-1]
+			val = params[length-1]
+			d=moving_sum(table_name,args,val)
+			table[params[0]]=d
+		elif(st.find("Btree")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			column = params[3]
+			d=Btree(table_name,column)
+			table[params[0]]=d
+		elif(st.find("Hash")!=-1):
+			p = params[2]
+			table_name = table[p[p.find('(')+1:].strip(',')]
+			column = params[3]
+			d=Hash(table_name,column)
+			table[params[0]]=d
+		
+
+
+#    head,data=importfile('sampledata.txt')
+#    sortColumns('sampledata.txt','qty')
+#    getAverage('sampledata.txt','qty')
+#    projection('sampledata.txt','qty','saleid','itemid')
+#    getSum('sampledata.txt','qty')
+#    select('sampledata.txt','qty=5')
+#    sumGroup('sampledata.txt','qty','pricerange')
+#    moving_average('sampledata.txt','qty',3)
+#    moving_sum('sampledata.txt','qty',3)
+# #    parseSelect('(time > 50) or (qty < 30)')
+#    Hash(data,'itemid') 
+#    Hash(data,'qty')
+#    head1,data1=importfile('datasample.txt')
+#    Hash(data1,'Q')
+

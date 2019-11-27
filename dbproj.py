@@ -32,7 +32,7 @@ def importfile(filename):
 	#headers=[file_array.dtype.names,file_array.dtype]
 	dtypes=[file_array.dtype]
 	headers=[file_array.dtype.names]
-	return file_array
+	return headers,file_array
 	
 
 def exportfile():
@@ -55,9 +55,10 @@ def projection(table_name,*colname):
 	data=table_name
 	h=[]
 	d=[]
-	for i in colname:
+	for i in colname[0]:
 		h.append(i)
 		d.append(data[i])
+
 	t_matrix = zip(*d)
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	return table
@@ -66,26 +67,30 @@ def projection(table_name,*colname):
 def select(table_name,*arg):
 	data=table_name
 	print(arg)
-	# s=data[data['qty']==2]
-	# for i in range(len(s)):
-	# 	s[i][5]=s[i][5]+5
-	# return data[(data['itemid']>75) | (data['qty']>2)]
+	s=data[data['qty']==2]
+	for i in range(len(s)):
+		s[i][5]=s[i][5]+5
+	print(data[(data['itemid']>75) or (data['qty']>2)])
+	return data[(data['itemid']>75) | (data['qty']>2)]
 
 #selection, projection, count, sum and avg aggregates
-def getAverage(filename,colname):
-	head,data=importfile(filename)
+def getAverage(table_name,colname):
+	data=table_name
 	average=np.mean(data[colname])
 	return average
 
-def moving_average(filename,colname, n):
-	head,data=importfile(filename)
+def moving_average(table_name,colname, n):
+	data = table_name
 	ret = np.cumsum(data[colname], dtype=float)
+	n=int(n)
+	print(ret[n:])
 	ret[n:] = ret[n:] - ret[:-n]
 	return ret[n - 1:] / n
 
-def moving_sum(filename,colname, n):
-	head,data=importfile(filename)
+def moving_sum(table_name,colname, n):
+	data = table_name
 	ret = np.cumsum(data[colname], dtype=float)
+	n=int(n)
 	ret[n:] = ret[n:] - ret[:-n]
 	return ret[n - 1:]
 
@@ -107,20 +112,27 @@ def getSum(filename,colname):
 	s=np.sum(data[colname])
 	return s
 
-
-def sumGroup(filename, *colname):
-	head,data=importfile(filename)
+def sumGroup(table_name, *colname):
+	head_old,data_old=importfile('sampledata.txt')
+	data=table_name
 	s=colname[0]
-	h=[]
+	h=colname
 	d=[]
-	for i in colname:
-		h.append(i)
-		d.append(data[i])
+	# print(colname)
+	# for i in colname:
+	# 	h.append(i)
+	# 	d.append(data[i])
 	t_matrix = zip(*d)
-	u_ij, inv_ij = np.unique(data[h[1:]], return_inverse=True)
-	# Create a totals array. You could do the fancy ijv_dtype thing if you wanted.
+	u_ij, inv_ij = np.unique(data[h[0][1:]], return_inverse=True)
+	# print("NEW!!")
+	# print(u_ij)
+	# print(inv_ij)
+	# print(data[h[1:]])
+	# # Create a totals array. You could do the fancy ijv_dtype thing if you wanted.
 	totals=np.zeros(len(u_ij))
-	np.add.at(totals, inv_ij, data[h[0]])
+	# print(data[h[0][0]])
+	np.add.at(totals, inv_ij, data[h[0][0]])
+	print(totals)
 	return totals
 
 def concateCols(filename,*colname):
@@ -150,68 +162,106 @@ if __name__ == "__main__":
 			filename = p[p.find('(')+1:p.find(')')]+".txt"
 			d=importfile(filename)
 			table[params[0]]=d
-			print(table)
+			# print(table)
+
 		elif(st.find("select")!=-1):
 			p = params[2]
+			cond = params[3:]
+			if '(' not in cond:
+				col = params[3]
+				condition = params[4:]
+				final_condition = [j.strip('[,()]') for j in condition]
+				final_condition = [i for i in final_condition if i] 
+				d=select(table_name[1],[col,conditions])
+			else:
+				print("hey")
 			#only one condition
-			# print(table[p[p.find('(')+1:].strip(',')])
-			#more than one condition
-			table_name = table[p[p.find('(')+1:].strip(',')]
-			conditions = params[3:]
-			d=select(table_name,conditions)
-			table[params[0]]=d
+			# if '(' not in somestring: 
+			# # print(table[p[p.find('(')+1:].strip(',')])
+			# #more than one condition
+			# table_name = table[p[p.find('(')+1:].strip(',')]
+			# conditions = params[3:]
+			# d=select(table_name[1],conditions)
+			# table[params[0]]=d
+
 		elif(st.find("project")!=-1):
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
 			column_names = params[3:]
-			d=projection(table_name,column_names)
+			final_column_names = [j.strip('[,()]') for j in column_names]
+			final_column_names = [i for i in final_column_names if i] 
+			d=projection(table_name[1],final_column_names)
 			table[params[0]]=d
-		elif(st.find("avg")!=-1):
+
+		elif(params[2].startswith("avg")):
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
-			column = params[3]
-			d=getAverage(table_name,column)
+			column = params[3].strip('[,()]')
+			d=getAverage(table_name[1],column)
 			table[params[0]]=d
+			print(d)
+
 		elif(st.find("sumgroup")!=-1):
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
 			args = params[3:]
-			d=sumGroup(table_name,args)
+			final_args = [j.strip('[,()]') for j in args]
+			final_args = [i for i in final_args if i] 
+			d=sumGroup(table_name[1],final_args)
 			table[params[0]]=d
+
 		elif(st.find("avggroup")!=-1):
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
 			args = params[3:]
-			d=avgGroup(table_name,args)
+			final_args = [j.strip('[,()]') for j in args]
+			final_args = [i for i in final_args if i] 
+			d=avgGroup(table_name[1],final_args)
 			table[params[0]]=d
-		elif(st.find("movavg")!=-1):
+
+		elif(params[2].startswith("movavg")):
 			length = len(params)
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
 			args = params[3:length-1]
-			val = params[length-1]
-			d=moving_average(table_name,args,val)
+			final_args = [j.strip('[,()]') for j in args]
+			final_args = [i for i in final_args if i]
+			str1="" 
+			for ele in final_args:
+				str1 += ele 
+			final_args=str1
+			val = params[length-1].strip('[,()]')
+			d=moving_average(table_name[1],final_args,val)
 			table[params[0]]=d
+
 		elif(st.find("movsum")!=-1):
 			length = len(params)
 			p = params[2]
 			table_name = table[p[p.find('(')+1:].strip(',')]
 			args = params[3:length-1]
-			val = params[length-1]
-			d=moving_sum(table_name,args,val)
+			final_args = [j.strip('[,()]') for j in args]
+			final_args = [i for i in final_args if i]
+			str1="" 
+			for ele in final_args:
+				str1 += ele 
+			final_args=str1
+			val = params[length-1].strip('[,()]')
+			d=moving_sum(table_name[1],final_args,val)
 			table[params[0]]=d
-		elif(st.find("Btree")!=-1):
-			p = params[2]
-			table_name = table[p[p.find('(')+1:].strip(',')]
-			column = params[3]
-			d=Btree(table_name,column)
-			table[params[0]]=d
-		elif(st.find("Hash")!=-1):
-			p = params[2]
-			table_name = table[p[p.find('(')+1:].strip(',')]
-			column = params[3]
-			d=Hash(table_name,column)
-			table[params[0]]=d
+
+		# elif(st.find("Btree")!=-1):
+		# 	p = params[2]
+		# 	table_name = table[p[p.find('(')+1:].strip(',')]
+		# 	column = params[3]
+		# 	d=Btree(table_name,column)
+		# 	table[params[0]]=d
+
+		# elif(st.find("Hash")!=-1):
+		# 	p = params[2]
+		# 	table_name = table[p[p.find('(')+1:].strip(',')]
+		# 	column = params[3]
+		# 	d=Hash(table_name,column)
+		# 	table[params[0]]=d
 		
 
 

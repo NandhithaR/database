@@ -10,14 +10,73 @@ import re
 hashmap={}
 # btree = OOBTree()
 collection=[]
-def Hash(data,colname):
+counter = 0
+def Hash(table_name,col_name):
+	key, value = col_name, table_name[col_name]
+	#get the key value pair and store in HashTable
 	if key in hashmap:
 		collection[hashmap[key]]['value'] = value
 	else:
 		collection = np.append(collection, np.array([(key,value)], dtype=collection.dtype))
 		hashmap[key] = len(collection) - 1 
+	print(hashmap)
+	print(collection)
+	# elif operation == 'search':
+	# 	parameters = each_line[each_line.find('(')+1:each_line.find(')')]
+	# 	key = int(parameters)
+	# if key in hashmap and hashmap[key] != -1:
+	# 	search_answers.append(collection[hashmap[key]]['value'])
+	# 	print(collection[hashmap[key]]['value'])
+	# else:
+	# 	search_answers.append("not present")
+	# 	print("not present")
+	# total_time = time.time() - start_time
+
 # def Btree(data,colname):
 
+def getJoin(table1,table2,args):
+	head1=table1.dtype.names
+	head2=table2.dtype.names
+	data1=table1
+	data2=table2
+	s = ""
+	for i in args:
+		s+=i
+	#multiple join
+	if 'and' in s:
+		print("mutiple join")
+	#single join
+	else:
+		(left,right) = s.split("=")
+		(left_file,left_col) = left.split(".")
+		(right_file,right_col) = right.split(".")
+		index1 = head1.index(left_col)
+		index2 = head2.index(right_col)
+		# j = []
+		# l = []
+		# # j=np.array([data1,data2])
+		# # print(j)
+		col_first=[]
+		col_sec=[]
+		first = data1[left_col]
+		second = data2[right_col]
+		temp = np.intersect1d(first,second)
+		for a in temp:
+			if(a in data1[left_col]):
+				# ind_left = np.where(data1[left_col] == a)
+				# print(ind_left)
+				col_first.append(data1[left_col])
+		# 		j.append(data1[ind_left])
+		print(col_first)
+		# 	if(a in data2[right_col]):
+		# 		ind_right = np.where(data2[right_col] == a)
+		# 		l.append(data2[ind_left])
+		# 	n.append(m)
+		# print(m)
+		# first=[]
+		# second=[]
+		# indfirst=0
+		# print(l[0])
 
 #check if string can be converted to float
 def isfloat(value):
@@ -61,77 +120,294 @@ def projection(table_name,*colname):
 	t_matrix = zip(*d)
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	return data[colname[0]]
+def findrelop(s):
+	if '>' in s:
+		relop = '>'
+	elif '<' in s:
+		relop = '<'
+	elif '=' in s:
+		relop = '='
+	elif '>=' in s:
+		relop = '>='
+	elif '<=' in s:
+		relop = '<='
+	elif '!=' in s:
+		relop = '!='
+	return relop
 
-##### to do ######
-def select_single_noarithmetic(table_name,col,cond):
+def getSelect(table_name,args):
+	s = ""
 	data=table_name
-	if(cond[0]=='>'):
-		s=data[data[col]>cond[1]]
-	elif(cond[0]=='<'):
-		s=data[data[col]<cond[1]]
-	elif(cond[0]=='='):
-		s=data[data[col]==cond[1]]
-	elif(cond[0]=='<='):
-		s=data[data[col]<=cond[1]]
-	elif(cond[0]=='>='):
-		s=data[data[col]>=cond[1]]
-	elif(cond[0]=='!='):
-		s=data[data[col]!=cond[1]]
-	# s=data[data[col]>5]
-	print(s)
-	# for i in range(len(s)):
-	# 	s[i][5]=s[i][5]+5
-	# return data[(data['itemid']>75) | (data['qty']>2)]
-def select_multiple_noarithmetic(table_name,col,ops,const,t):
-	data=table_name
-	if t == 'or':
-		s=False
-		l=[s]
-		for i in range(len(col)):
-			if ops[i] == '>':
-				b = (data[col[i]]>int(const[i]))
-			elif ops[i] == '<':
-				b = data[col[i]]<int(const[i])
-			elif ops[i] == '=':
-				b = data[col[i]]==int(const[i])
-			elif ops[i] == '<=':
-				b = data[col[i]]<=int(const[i])
-			elif ops[i] == '>=':
-				b = data[col[i]]>=int(const[i])
-			elif ops[i] == '!=':
-				b = data[col[i]]!=int(const[i])
+	for i in args:
+		s+=i
+	if ('or' in s) and ('+' in s or '-' in s or '*' in s or '/' in s):
+		cond=s.split('or')
+		l=[True]
+
+		for i in range(len(cond)):
+			op=findrelop(cond[i])
+			c=cond[i].split(op)
+			if c[0].isdigit():
+				cols=c[1]
+				const=c[0]
+			else:
+				cols=c[0]
+				const=c[1]
+			if '+' in cols:
+				col =cols.split('+')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] + int(col[1])
+			if '-' in cols:
+				col =cols.split('-')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] - int(col[1])
+			if '/' in cols:
+				col =cols.split('/')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] / float(col[1])
+			if '*' in cols:
+				col =cols.split('*')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] * float(col[1])
+
+			if op == '>':
+				b = (data[col[0]]>int(const))
+			elif op == '<':
+				b = data[col[0]]<int(const)
+			elif op == '=':
+				b = data[col[0]]==int(const)
+			elif op == '<=':
+				b = data[col[0]]<=int(const)
+			elif op == '>=':
+				b = data[col[0]]>=int(const)
+			elif op == '!=':
+				b = data[col[0]]!=int(const)
 			l=l|b
+		return data[l]
 		print(data[l])
-	if t == 'and':
-		s=False
-		l=[s]
-		for i in range(len(col)):
-			if ops[i] == '>':
-				b = (data[col[i]]>int(const[i]))
-			elif ops[i] == '<':
-				b = data[col[i]]<int(const[i])
-			elif ops[i] == '=':
-				b = data[col[i]]==int(const[i])
-			elif ops[i] == '<=':
-				b = data[col[i]]<=int(const[i])
-			elif ops[i] == '>=':
-				b = data[col[i]]>=int(const[i])
-			elif ops[i] == '!=':
-				b = data[col[i]]!=int(const[i])
+	elif ('and' in s) and ('+' in s or '-' in s or '*' in s or '/' in s):
+		cond=s.split('and')
+		l=[True]
+
+		for i in range(len(cond)):
+			op=findrelop(cond[i])
+			c=cond[i].split(op)
+			if c[0].isdigit():
+				cols=c[1]
+				const=c[0]
+			else:
+				cols=c[0]
+				const=c[1]
+			if '+' in cols:
+				col =cols.split('+')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] + int(col[1])
+			if '-' in cols:
+				col =cols.split('-')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] - int(col[1])
+			if '/' in cols:
+				col =cols.split('/')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] / float(col[1])
+			if '*' in cols:
+				col =cols.split('*')
+				for i in range(len(data[col[0]])):
+					data[col[0]][i] = data[col[0]][i] * float(col[1])
+
+			if op == '>':
+				b = (data[col[0]]>int(const))
+			elif op == '<':
+				b = data[col[0]]<int(const)
+			elif op == '=':
+				b = data[col[0]]==int(const)
+			elif op == '<=':
+				b = data[col[0]]<=int(const)
+			elif op == '>=':
+				b = data[col[0]]>=int(const)
+			elif op == '!=':
+				b = data[col[0]]!=int(const)
 			l=l&b
-		print(data[l])
-		# print((data['time']>50) | (data['qty']<30))
+		return data[l]
+	elif '+' in s or '-' in s or '*' in s or '/' in s:
+		# s=data[data[col]>int(r_const)]
+		print(s)
+		if '>' in s:
+			relop = '>'
+			s=s.split('>')
+		elif '<' in s:
+			relop = '<'
+			s=s.split('<')
+		elif '=' in s:
+			relop = '='
+			s=s.split('=')
+		elif '>=' in s:
+			relop = '>='
+			s=s.split('>=')
+		elif '<=' in s:
+			relop = '<='
+			s=s.split('<=')
+		elif '!=' in s:
+			relop = '!='
+			s=s.split('!=')
+		print(s)
+		if s[0].isdigit():
+			const=s[0]
+			col=s[1]
+		else:
+			const=s[1]
+			col=s[0]
+		#split col-name arithmetic operation and const
+		if '+' in col:
+			col =col.split('+')
+			for i in range(len(data[col[0]])):
+				data[col[0]][i] = data[col[0]][i] + int(col[1])
+		if '-' in col:
+			col =col.split('-')
+			for i in range(len(data[col[0]])):
+				data[col[0]][i] = data[col[0]][i] - int(col[1])
+		if '/' in col:
+			col =col.split('/')
+			for i in range(len(data[col[0]])):
+				data[col[0]][i] = data[col[0]][i] / float(col[1])
+		if '*' in col:
+			col =col.split('*')
+			for i in range(len(data[col[0]])):
+				data[col[0]][i] = data[col[0]][i] * float(col[1])
+		
+		if relop=='>':
+			ans = data[data[col[0]]>int(const)]
+		elif relop=='<':
+			ans = data[data[col[0]]<int(const)]
+		elif relop=='=':
+			ans = data[data[col[0]]==int(const)]
+		elif relop=='>=':
+			ans = data[data[col[0]]<=int(const)]
+		elif relop=='<=':
+			ans = data[data[col[0]]<=int(const)]
+		elif relop=='!=':
+			ans = data[data[col[0]]!=int(const)]
+		return ans
+		# for i in range(len(s)):
+		# 	s[i][5]=s[i][5]+5
+	elif 'or' in s:
+		cond=s.split('or')
+		# cols=[]
+		v=True
+		l=[v]
+		# const=[]
+		for i in range(len(cond)):
+			op=findrelop(cond[i])
+			c=cond[i].split(op)
+			if c[0] in data.dtype.names:
+				# cols.append(c[0])
+				cols=c[0]
+				# const.append(c[1])
+				const=c[1]
+			else:
+				# cols.append(c[1])
+				cols=c[1]
+				# const.append(c[0])
+				const=c[0]
 
-def select_single_arithmetic(table_name,col,arithop,a_const,r_const,op):
-	data=table_name
-	print(col)
-	# s=data[data[col]>int(r_const)]
-	# print(s)
-	# for i in range(len(s)):
-	# 	s[i][5]=s[i][5]+5
+			if op == '>':
+				b = (data[cols]>int(const))
+			elif op == '<':
+				b = data[cols]<int(const)
+			elif op == '=':
+				b = data[cols]==int(const)
+			elif op == '<=':
+				b = data[cols]<=int(const)
+			elif op == '>=':
+				b = data[cols]>=int(const)
+			elif op == '!=':
+				b = data[cols]!=int(const)
+			l=l|b
+		return data[l]
 
-# def select_multiple_noarithmetic():
+			# if cond[i] in table_name[0][0]:
+			# 	cols.append(cond[i])
+			# elif cond[i] in ['>','<','=','<=','>=']:
+			# 	op.append(cond[i])
+			# elif cond[i].isdigit():
+			# 	const.append(cond[i])
+	elif 'and' in s:
+		cond=s.split('and')
+		# cols=[]
+		v=True
+		l=[v]
+		# const=[]
+		for i in range(len(cond)):
+			op=findrelop(cond[i])
+			c=cond[i].split(op)
+			if c[0] in data.dtype.names:
+				# cols.append(c[0])
+				cols=c[0]
+				# const.append(c[1])
+				const=c[1]
+			else:
+				# cols.append(c[1])
+				cols=c[1]
+				# const.append(c[0])
+				const=c[0]
 
+			if op == '>':
+				b = (data[cols]>int(const))
+			elif op == '<':
+				b = data[cols]<int(const)
+			elif op == '=':
+				b = data[cols]==int(const)
+			elif op == '<=':
+				b = data[cols]<=int(const)
+			elif op == '>=':
+				b = data[cols]>=int(const)
+			elif op == '!=':
+				b = data[cols]!=int(const)
+			l=l&b
+		return data[l]
+	else:
+		if '>' in s:
+			relop = '>'
+			s=s.split('>')
+		elif '<' in s:
+			relop = '<'
+			s=s.split('<')
+		elif '=' in s:
+			relop = '='
+			s=s.split('=')
+		elif '>=' in s:
+			relop = '>='
+			s=s.split('>=')
+		elif '<=' in s:
+			relop = '<='
+			s=s.split('<=')
+		elif '!=' in s:
+			relop = '!='
+			s=s.split('!=')
+		
+		if s[0] in table_name.dtype.names:
+			col=s[0]
+			const=s[1]
+		else:
+			col=s[1]
+			const=s[0]
+		if relop=='>':
+			ans = data[data[col]>int(const)]
+		elif relop=='<':
+			ans = data[data[col]<int(const)]
+		elif relop=='=':
+			ans = data[data[col]==int(const)]
+		elif relop=='>=':
+			ans = data[data[col]<=int(const)]
+		elif relop=='<=':
+			ans = data[data[col]<=int(const)]
+		elif relop=='!=':
+			ans = data[data[col]!=int(const)]
+		return ans
+	# h = data.dtype.names
+	# table = tabulate(ans, h, tablefmt="fancy_grid")
+	# return ans
+	
 #selection, projection, count, sum and avg aggregates
 def getAverage(table_name,colname):
 	data=table_name
@@ -178,13 +454,21 @@ def sumGroup(table_name, colname):
 	u_ij, inv_ij = np.unique(data[h[1:]], return_inverse=True)
 	totals=np.zeros(len(u_ij))
 	np.add.at(totals, inv_ij, data[h[0]])
+	l = data[colname].dtype
 	flat_list = [item for sublist in u_ij for item in sublist]
-	tab = [totals,flat_list]
+	tab = np.array([totals,flat_list])
 	t_matrix = zip(*tab)
-	t = [h,t_matrix]
-	to_return = [totals,u_ij]
-	print(u_ij)
-	print(t_matrix)
+	# np.rec.fromarrays(t_matrix.transpose(), dtype=l)
+	# new_array = np.core.records.fromrecords(t_matrix,
+    #                                     names='qty,pricerange',
+    #                                     formats='<i8,S10')
+	# v1 = np.array(t_matrix, dtype=l)
+	# a[['x','y']].dtype
+	# print(data[colname].dtype)
+	# ll= np.array(t_matrix)
+	# np.array([tuple(x) for x in ll],dtype=l)
+	# new_array = np.array(t_matrix)
+	# print(new_array)
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	# print(table)
 	return totals
@@ -211,77 +495,38 @@ if __name__ == "__main__":
 		st = raw_input()
 		params=st.split(" ")
 		#call function
-		if(st.find("inputfromfile")!=-1):
+		if(st.startswith("Hash")):
+			res = st.replace("Hash","")
+			res=res.strip('[,()]').split(',')
+			table_name=res[0]
+			table_name = table[table_name]
+			col_name=res[1]
+			d=Hash(table_name,col_name)
+			table[params[0]]=d
+		elif(st.startswith("Btree")):
+			res = st.replace("Btree","")
+			res=res.strip('[,()]').split(',')
+			table_name=res[0]
+			table_name = table[table_name]
+			col_name=res[1]
+			d=Btree(table_name,col_name)
+			table[params[0]]=d
+		elif(st.find("inputfromfile")!=-1):
 			p = params[2]
 			filename = p[p.find('(')+1:p.find(')')]+".txt"
 			d=importfile(filename)
 			table[params[0]]=d
 			# print(table)
 		elif(params[2].startswith("select")):
-			p = params[2]
-			table_name = table[p[p.find('(')+1:].strip(',')]
-			cond = params[3:]
-			if ('+' in cond) or ('*' in cond) or ('/' in cond) or ('-' in cond):
-				if '(' not in cond[0]:
-					if(params[3] in table_name[0]):
-						col = params[3].strip('[,()]')
-						arithop = params[4].strip('[,()]')
-						a_const= params[5].strip('[,()]')
-						r_const=params[7].strip('[,()]')
-						op=params[6].strip('[,()]')
-					else:
-						col = params[5].strip('[,()]')
-						arithop=params[6].strip('[,()]')
-						a_const=params[7].strip('[,()]')
-						r_const=params[3].strip('[,()]')
-						op=params[4].strip('[,()]')
-					d=select_single_arithmetic(table_name,col,arithop,a_const,r_const,op)	
-					
-			else:
-				if '(' not in cond[0]:
-					#separate col and conditions
-					if(params[3] in table_name[0]):
-						col = params[3]
-					else:
-						col = params[5]
-					condition = params[4:]
-					final_condition = [j.strip('[,()]') for j in condition]
-					final_condition = [i for i in final_condition if i] 
-					d=select_single_noarithmetic(table_name,col,final_condition)
-				else:
-					cols =[]
-					const=[]
-					op=[]
-					#or conditions
-					if('or' in cond):
-						for i in range(len(cond)):
-							cond[i]=cond[i].strip('[,()]')
-							if cond[i] in table_name[0][0]:
-								cols.append(cond[i])
-							elif cond[i] in ['>','<','=','<=','>=']:
-								op.append(cond[i])
-							elif cond[i].isdigit():
-								const.append(cond[i])
-						d=select_multiple_noarithmetic(table_name,cols,op,const,'or')
-					elif('and' in cond):
-						for i in range(len(cond)):
-							cond[i].strip('[,()]')
-							if cond[i] in table_name[0]:
-								cols.append(cond[i])
-							elif cond[i] in ['>','<','=','<=','>=']:
-								op.append(cond[i])
-							elif cond[i].isdigit():
-								const.append(cond[i])
-						d=select_multiple_noarithmetic(table_name,cols,op,const,'and')	
-
-			#only one condition
-			# if '(' not in somestring: 
-			# # print(table[p[p.find('(')+1:].strip(',')])
-			# #more than one condition
-			# table_name = table[p[p.find('(')+1:].strip(',')]
-			# conditions = params[3:]
-			# d=select(table_name[1],conditions)
-			# table[params[0]]=d
+			p = params[2:]
+			res = [sub.replace('select', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			table_name = table[final_args[0]]
+			d=getSelect(table_name,final_args[1:])
+			table[params[0]]=d
 
 		elif(params[2].startswith("project")):
 			p = params[2:]
@@ -318,7 +563,19 @@ if __name__ == "__main__":
 			column_names = final_args[1:]
 			d=sumGroup(table_name,column_names)
 			table[params[0]]=d
-
+		elif(params[2].startswith("join")):
+			p = params[2:]
+			res = [sub.replace('join', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			table_name1 = table[final_args[0]]
+			table_name2 = table[final_args[1]]
+			args = final_args[2:]
+			# length = len(final_args)
+			d=getJoin(table_name1,table_name2,args)
+			# table[params[0]]=d
 		# elif(params[2].startswith("avggroup")):
 		# 	p = params[2:]
 		# 	table_name = table[(p[0].split('('))[1].split(',')[0]]
@@ -359,12 +616,9 @@ if __name__ == "__main__":
 		# 	d=Btree(table_name,column)
 		# 	table[params[0]]=d
 
-		# elif(st.find("Hash")!=-1):
-		# 	p = params[2]
-		# 	table_name = table[p[p.find('(')+1:].strip(',')]
-		# 	column = params[3]
-		# 	d=Hash(table_name,column)
-		# 	table[params[0]]=d
+		
+			# d=Hash(table_name,column)
+			# table[params[0]]=d
 		
 
 

@@ -4,44 +4,44 @@ import numpy.lib.recfunctions as rfn
 from operator import itemgetter
 from itertools import groupby
 from collections import defaultdict
-# from BTrees.OOBTree import OOBTree
+from BTrees.OOBTree import OOBTree
 import re
 import copy
 import time
 
 hashmap={}
-# btree = OOBTree()
-collection_hash={}
+btree = OOBTree()
+collection_hash=[]
 collection_btree=[]
-counter = 0
-def Hash(table_name,col_name):
-	key = col_name
-	value = table_name[col_name]
-	if key in hashmap:
-		collection_hash[hashmap[key]]['value'] = value
-	else:
-		hashmap[key] = len(collection_hash) + 1
-		collection_hash[hashmap[key]]['value'] = value
+hash_keys = {}
+btree_keys = {}
 
-	print(collection_hash)
+def HashTable(tname,table_name,col_name):
+	hashmap = defaultdict(lambda:[])
+	collection_hash = table_name
+	for row in range(len(collection_hash)):
+		hashmap[collection_hash[row][col_name]].append(row)
+	hash_keys[tname+ '.' + col_name] = hashmap
 
-	# collection_hash = np.array([(key,value)])
-	# if key in hashmap:
-	# 	collection_hash[hashmap[key]]['value'] = value
-	# else:
-	# 	collection = np.append(collection, np.array([(key,value)], dtype=collection.dtype))
-	# 	hashmap[key] = len(collection) - 1 
-	# if key in hashmap and hashmap[key] != -1:
-	# 	print(collection[hashmap[key]]['value'])
-	# else:
-	# 	search_answers.append("not present")
-	# 	print("not present")
+def Hash(tname, col_name, val):
+	hashmap = hash_keys[tname + '.' + col_name]
+	matched_rows = hashmap[float(val)]
+	print(matched_rows)
+	return matched_rows
 
-	# if key in hashmap:
-	# 	collection_hash[hashmap[key]]['value'] = value
-	# else:
-	# 	collection_hash = np.append(collection_hash, np.array([(key,value)]))
-# def Btree(data,colname):
+def BtreesStruc(tname,table_name,col_name):
+	hashmap = defaultdict(lambda:[])
+	collection_btree = table_name
+	for row in range(len(collection_btree)):
+		hashmap[collection_btree[row][col_name]].append(row)
+	btree_keys[tname+ '.' + col_name] = hashmap
+	btree.update(hashmap)
+
+def Btrees(tname, col_name, val):
+	hashmap = btree_keys[tname + '.' + col_name]
+	matched_rows = hashmap[float(val)]
+	print(matched_rows)
+	return matched_rows
 
 def getJoin(table1,table2,args):
 	head1=table1.dtype.names
@@ -462,19 +462,18 @@ def isfloat(value):
 #Import a vertical bar delimited file into an array-table
 def importfile(filename):
 	file_array=np.genfromtxt(filename,dtype=None,delimiter='|',names=True)
-	#headers=[file_array.dtype.names,file_array.dtype]
 	dtypes=[file_array.dtype]
 	headers=[file_array.dtype.names]
 	return file_array
 	
 
-def exportfile(filename1,filename2):
-	x = np.arange(0, 10, 1)
-	c = np.savetxt(filename2, x, delimiter ='|') 
-	a = open(filename2, 'r')# open file in read mode 
-	print("the file contains:") 
-	print(a.read()) 
-	return a
+def exportfile(table_name,filename):
+	# x = np.arange(0, 10, 1)
+	c = np.savetxt(filename, table_name, delimiter ='|') 
+	# a = open(filename, 'r')# open file in read mode 
+	# print("the file contains:") 
+	# print(a.read()) 
+	# return a
 
 #sort by columns
 def sortColumns(table_name,colname):
@@ -485,7 +484,6 @@ def sortColumns(table_name,colname):
 	headers = []
 	for i in h:
 		headers.append(i)
-	# t_matrix = zip(*data)
 	table = tabulate(data, headers, tablefmt="fancy_grid")
 	print(table)
 	return data
@@ -497,11 +495,11 @@ def projection(table_name,*colname):
 	for i in colname[0]:
 		h.append(i)
 		d.append(data[i])
-
 	t_matrix = zip(*d)
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	print(table)
 	return data[colname[0]]
+
 def findrelop(s):
 	if '>' in s:
 		relop = '>'
@@ -517,7 +515,7 @@ def findrelop(s):
 		relop = '!='
 	return relop
 
-def getSelect(table_name,args):
+def getSelect(tname,table_name,args):
 	s = ""
 	data=table_name
 	for i in args:
@@ -526,7 +524,8 @@ def getSelect(table_name,args):
 		cond=s.split('or')
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
-		l=[False]
+		l=[]
+		temp = []
 		for i in range(len(cond)):
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
@@ -541,41 +540,50 @@ def getSelect(table_name,args):
 				col =cols.split('+')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp = copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] + int(col[1])
-			if '-' in cols:
+					temp[i] = data[col[0]][i] + int(col[1])
+			elif '-' in cols:
 				col =cols.split('-')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp = copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] - int(col[1])
-			if '/' in cols:
+					temp[i] = data[col[0]][i] - int(col[1])
+			elif '/' in cols:
 				col =cols.split('/')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp = copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] / float(col[1])
-			if '*' in cols:
+					temp[i] = data[col[0]][i] / float(col[1])
+			elif '*' in cols:
 				col =cols.split('*')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp = copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] * float(col[1])
-			print(col[0])
+					temp[i] = data[col[0]][i] * float(col[1])
+			else:
+				temp = copy.deepcopy(data[cols])
+
 			if op == '>':
-				b = (data[cols]>int(const))
+				b = (temp>int(const))
 				print(b)
 			elif op == '<':
-				b = data[cols]<int(const)
+				b = temp<int(const)
 			elif op == '=':
-				b = data[cols]==int(const)
+				b = temp==int(const)
 			elif op == '<=':
-				b = data[cols]<=int(const)
+				b = temp<=int(const)
 			elif op == '>=':
-				b = data[cols]>=int(const)
+				b = temp>=int(const)
 			elif op == '!=':
-				b = data[cols]!=int(const)
-			l=l|b
+				b = temp!=int(const)
+			if len(l)==0:
+				l=b
+			else:
+				l=l|b
 		h = data.dtype.names
 		headers = []
 		for i in h:
@@ -590,10 +598,12 @@ def getSelect(table_name,args):
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
 		l=[True]
+		
 		for i in range(len(cond)):
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
+			temp =[]
 			if c[0].isdigit():
 				cols=c[1]
 				const=c[0]
@@ -604,48 +614,55 @@ def getSelect(table_name,args):
 				col =cols.split('+')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp=copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] + int(col[1])
-			if '-' in cols:
+					temp[i] = data[col[0]][i] + int(col[1])
+			elif '-' in cols:
 				col =cols.split('-')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp=copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] - int(col[1])
-			if '/' in cols:
+					temp[i] = data[col[0]][i] - int(col[1])
+			elif '/' in cols:
 				col =cols.split('/')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp=copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] / float(col[1])
-			if '*' in cols:
+					temp[i] = data[col[0]][i] / float(col[1])
+			elif '*' in cols:
 				col =cols.split('*')
 				col = [x.strip(' ') for x in col]
 				cols=col[0]
+				temp=copy.deepcopy(data[col[0]])
 				for i in range(len(data[col[0]])):
-					data[col[0]][i] = data[col[0]][i] * float(col[1])
+					temp[i] = data[col[0]][i] * float(col[1])
+			else:
+				temp = copy.deepcopy(data[cols])
 			if op == '>':
-				b = (data[cols]>int(const))
+				b = (temp>int(const))
 			elif op == '<':
-				b = data[cols]<int(const)
+				b = temp<int(const)
 			elif op == '=':
-				b = data[cols]==int(const)
+				b = temp==int(const)
 			elif op == '<=':
-				b = data[cols]<=int(const)
+				b = temp<=int(const)
 			elif op == '>=':
-				b = data[cols]>=int(const)
+				b = temp>=int(const)
 			elif op == '!=':
-				b = data[cols]!=int(const)
+				b = temp!=int(const)
 			l=l&b
 		h = data.dtype.names
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(data[l], headers, tablefmt="fancy_grid")
 		print(table)
 		return data[l]
+
 	elif '+' in s or '-' in s or '*' in s or '/' in s:
+		temp = []
 		if '>' in s:
 			relop = '>'
 			s=s.split('>')
@@ -680,36 +697,40 @@ def getSelect(table_name,args):
 		if '+' in col:
 			col =col.split('+')
 			col = [x.strip(' ') for x in col]
+			temp=copy.deepcopy(data[col[0]])
 			for i in range(len(data[col[0]])):
-				data[col[0]][i] = data[col[0]][i] + int(col[1])
+				temp[i] = data[col[0]][i] + int(col[1])
 		if '-' in col:
 			col =col.split('-')
 			col = [x.strip(' ') for x in col]
+			temp=copy.deepcopy(data[col[0]])
 			for i in range(len(data[col[0]])):
-				data[col[0]][i] = data[col[0]][i] - int(col[1])
+				temp[i] = data[col[0]][i] - int(col[1])
 		if '/' in col:
 			col =col.split('/')
 			col = [x.strip(' ') for x in col]
+			temp=copy.deepcopy(data[col[0]])
 			for i in range(len(data[col[0]])):
-				data[col[0]][i] = data[col[0]][i] / float(col[1])
+				temp[i] = data[col[0]][i] / float(col[1])
 		if '*' in col:
 			col =col.split('*')
 			col = [x.strip(' ') for x in col]
+			temp=copy.deepcopy(data[col[0]])
 			for i in range(len(data[col[0]])):
-				data[col[0]][i] = data[col[0]][i] * float(col[1])
+				temp[i] = data[col[0]][i] * float(col[1])
 		
 		if relop=='>':
-			ans = data[data[col[0]]>int(const)]
+			ans = data[temp>int(const)]
 		elif relop=='<':
-			ans = data[data[col[0]]<int(const)]
+			ans = data[temp<int(const)]
 		elif relop=='=':
-			ans = data[data[col[0]]==int(const)]
+			ans = data[temp==int(const)]
 		elif relop=='>=':
-			ans = data[data[col[0]]<=int(const)]
+			ans = data[temp<=int(const)]
 		elif relop=='<=':
-			ans = data[data[col[0]]<=int(const)]
+			ans = data[temp<=int(const)]
 		elif relop=='!=':
-			ans = data[data[col[0]]!=int(const)]
+			ans = data[temp!=int(const)]
 		h = ans.dtype.names
 		headers = []
 		for i in h:
@@ -742,7 +763,22 @@ def getSelect(table_name,args):
 			elif op == '<':
 				b = data[cols]<float(const)
 			elif op == '=':
-				b = data[cols]==float(const)
+				if(str(tname)+'.'+str(cols) in hash_keys):
+					rows = Hash(tname,cols,const)
+					n=len(cols)
+					b = [False]*(n+1)
+					for i in rows:
+						b[i]=True
+					b = np.asarray(b)
+				elif(str(tname)+'.'+str(cols) in btree_keys):
+					rows = Btrees(tname,cols,const)
+					n=len(cols)
+					b = [False]*(n+1)
+					for i in rows:
+						b[i]=True
+					b = np.asarray(b)
+				else:
+					b = data[cols]==float(const)
 			elif op == '<=':
 				b = data[cols]<=float(const)
 			elif op == '>=':
@@ -782,7 +818,23 @@ def getSelect(table_name,args):
 			elif op == '<':
 				b = data[cols]<float(const)
 			elif op == '=':
-				b = data[cols]==float(const)
+				# b = data[cols]==float(const)
+				if(str(tname)+'.'+str(cols) in hash_keys):
+					rows = Hash(tname,cols,const)
+					n=len(cols)
+					b = [False]*(n+1)
+					for i in rows:
+						b[i]=True
+					b = np.asarray(b)
+				elif(str(tname)+'.'+str(cols) in btree_keys):
+					rows = Btrees(tname,cols,const)
+					n=len(cols)
+					b = [False]*(n+1)
+					for i in rows:
+						b[i]=True
+					b = np.asarray(b)
+				else:
+					b = data[cols]==float(const)
 			elif op == '<=':
 				b = data[cols]<=float(const)
 			elif op == '>=':
@@ -835,7 +887,14 @@ def getSelect(table_name,args):
 		elif relop=='<':
 			ans = data[data[col]<float(const)]
 		elif relop=='=':
-			ans = data[data[col]==float(const)]
+			if(str(tname)+'.'+str(col) in hash_keys):
+				rows = Hash(tname,col,const)
+				ans = data[rows]
+			elif(str(tname)+'.'+str(col) in btree_keys):
+				rows = Btrees(tname,col,const)
+				ans = data[rows]
+			else:
+				ans = data[data[col]==float(const)]
 		elif relop=='>=':
 			ans = data[data[col]<=float(const)]
 		elif relop=='<=':
@@ -858,6 +917,7 @@ def getAverage(table_name,colname):
 	headers = [colname]
 	d = np.array([average])
 	return average
+
 def getCount(table_name):
 	num_rows = np.shape(table_name)[0]
 	print(num_rows)
@@ -916,8 +976,6 @@ def countGroup(table_name, colname):
 	flat_list = [item for sublist in u_ij for item in sublist]
 	flat_list=np.array(flat_list)
     tab = rfn.merge_arrays((totals,u_ij),flatten=True)
-    # t = [h,t_matrix]
-    # to_return = [totals,u_ij]
     table = tabulate(tab, h, tablefmt="fancy_grid")
     print(table) 
     return tab
@@ -948,7 +1006,6 @@ def concat(table_name1,table_name2):
 	data2=table_name2
 	c = np.ma.concatenate((data1, data2), axis=None)
 	t_matrix = zip(*c)
-    # tabulate data
 	h = data1.dtype.names
 	headers = []
 	for i in h:
@@ -976,7 +1033,8 @@ if __name__ == "__main__":
 			table_name=res[0]
 			table_name = table[table_name]
 			col_name=res[1]
-			d=Hash(table_name,col_name)
+			tname=res[0]
+			d=HashTable(tname,table_name,col_name)
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
@@ -989,7 +1047,8 @@ if __name__ == "__main__":
 			table_name=res[0]
 			table_name = table[table_name]
 			col_name=res[1]
-			d=Btree(table_name,col_name)
+			tname=res[0]
+			d=BtreesStruc(tname,table_name,col_name)
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
@@ -1004,6 +1063,18 @@ if __name__ == "__main__":
 			total_time = time.time() - start_time
 			print("time:")
 			print(total_time)
+		
+		elif(st.find("outputtofile")!=-1):
+			start_time = time.time()
+			p = params[0]
+			args = p[p.find('(')+1:p.find(')')]
+			args=args.split(",")
+			table_name=table[args[0]]
+			filename=args[1]
+			exportfile(table_name,filename)
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("select")):
 			start_time = time.time()
@@ -1015,7 +1086,8 @@ if __name__ == "__main__":
 			final_args = [j for sub in final_args for j in sub]
 			final_args = [x.strip(' ') for x in final_args]
 			table_name = table[final_args[0]]
-			d=getSelect(table_name,final_args[1:])
+			tname = final_args[0]
+			d=getSelect(tname,table_name,final_args[1:])
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")

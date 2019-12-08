@@ -12,7 +12,11 @@ This project supports the following functionalities:
 10.select 
 11.project 
 12.join
-13.outputtofile
+13.Hash
+14.Btree
+15.outputtofile
+16.sort
+17.concat
 
 The user can enter the the name of the functions to get the required queries.
 Once executed the time taken for the query to be executed will be displayed.
@@ -48,7 +52,15 @@ join: Takes two tables and joins them based on a contions.  This method supports
 (with and without arithmetic operation on columns), join with multiple or (with and without arithmetic operation on columns) 
 join with just one codition
 
+Hash: Takes table name and column name and creates a hashmap for the column name
+
+Btree: Takes table name and column name and creates a btree for the column name
+
 outputtofile: Takes a table and the name of a file and stores it in the required file.
+
+sort: Takes a table and one or more columns and returns the table in sorted order based on the columns.
+
+concat: Takes two tables as input with the same schema and concatenate each column in the order
 
 Example Usage: 
 Enter the query: R := inputfromfile(sales1)

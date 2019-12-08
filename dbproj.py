@@ -53,6 +53,7 @@ def getJoin(table1,table2,args):
 	head2=table2.dtype.names
 	data1=table1
 	data2=table2
+	join_ans=[]
 	s = ""
 	for i in args:
 		s+=i
@@ -416,7 +417,6 @@ def getJoin(table1,table2,args):
 					b=(data1[i][left_col]==data2[j][right_col])
 				elif relop == '!=':
 					b=(data1[i][left_col]!=data2[j][right_col])
-				
 				if b:
 					#TBD: Change column names
 					first_dtype = {}
@@ -438,6 +438,7 @@ def getJoin(table1,table2,args):
 				else:
 					join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
 					final_Count=final_Count+1
+
 	join_ans_headers= join_ans.dtype.names
 	headers = []
 	for i in join_ans_headers:
@@ -532,7 +533,7 @@ def getSelect(tname,table_name,args):
 	if ('or' in s) and ('+' in s or '-' in s or '*' in s or '/' in s):
 		cond=s.split('or')
 		cond = [x.strip(' ') for x in cond]
-		cond = [x.strip('[,()]') for x in cond]
+		cond = [x.strip('[,()]\n') for x in cond]
 		l=[]
 		temp = []
 		for i in range(len(cond)):
@@ -617,7 +618,7 @@ def getSelect(tname,table_name,args):
 	elif ('and' in s) and ('+' in s or '-' in s or '*' in s or '/' in s):
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
-		cond = [x.strip('[,()]') for x in cond]
+		cond = [x.strip('[,()]\n') for x in cond]
 		l=[True]
 		for i in range(len(cond)):
 			flag=0
@@ -790,7 +791,8 @@ def getSelect(tname,table_name,args):
 	elif 'or' in s:
 		cond=s.split('or')
 		cond = [x.strip(' ') for x in cond]
-		cond = [x.strip('[,()]') for x in cond]
+		cond = [x.strip('[,()]\n') for x in cond]
+		print(cond)
 		v=False
 		l=[v]
 		for i in range(len(cond)):
@@ -856,7 +858,7 @@ def getSelect(tname,table_name,args):
 	elif 'and' in s:
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
-		cond = [x.strip('[,()]') for x in cond]
+		cond = [x.strip('[,()]\n') for x in cond]
 		v=True
 		l=[v]
 		for i in range(len(cond)):
@@ -1014,7 +1016,7 @@ K-way moving aggregate of the attribute is returned."""
 def moving_average(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
-	n=float(n)
+	n=int(n)
 	ret[n:] = ret[n:] - ret[:-n]
 	print(ret[n - 1:] / n)
 	return ret[n - 1:] / n
@@ -1023,7 +1025,7 @@ way moving aggregate of the attribute is returned."""
 def moving_sum(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
-	n=float(n)
+	n=int(n)
 	ret[n:] = ret[n:] - ret[:-n]
 	print(ret[n-1:])
 	return ret[n - 1:]
@@ -1067,10 +1069,10 @@ def countGroup(table_name, colname):
         totals[i] = totals[i] + 1
 	flat_list = [item for sublist in u_ij for item in sublist]
 	flat_list=np.array(flat_list)
-    tab = rfn.merge_arrays((totals,u_ij),flatten=True)
-    table = tabulate(tab, h, tablefmt="fancy_grid")
-    print(table) 
-    return tab
+	tab = rfn.merge_arrays((totals,u_ij),flatten=True)
+	table = tabulate(tab, h, tablefmt="fancy_grid")
+	print(table)
+	return tab
 
 """sumGroup function takes the table name as the first parameter, performs the aggregate
 functionality on the next single attribute passed to the function grouped by all the rest
@@ -1117,305 +1119,307 @@ if __name__ == "__main__":
 	finalOutputFile = 'finalOutputFile'
 	st = ""
 	print("DATABASE PROJECT:\nThis program supports the following functionalities\n \n1.inputfromfile\n2.average\n3.sum\n4.count\n5.averageGroup\n6.sumGroup\n7.countGroup\n8.movingAvg\n9.movingSum\n10.select\n11.project\n12.join\n13.Hash\n14.Btree\n15.outputtofile\n16.sort\n17.concat")
-	print("To exit enter quit")
-	while(st!="quit"):
-		st = raw_input("Enter Query:")
-		params=st.split(":=")
-		params = [x.strip(' ') for x in params]
-		#call function
-		if(st.startswith("Hash")):
-			start_time = time.time()
-			res = st.replace("Hash","")
-			res=res.strip('[,()]').split(',')
-			table_name=res[0]
-			table_name = table[table_name]
-			col_name=res[1]
-			tname=res[0]
-			d=HashTable(tname,table_name,col_name)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			print(total_time)
+	# print("To exit enter quit")
+	inp_file = raw_input("Enter file:")
+	with open(inp_file) as openfileobject:
+		for line in openfileobject:
+			st = line
+			params=st.split(":=")
+			params = [x.strip(' ') for x in params]
+	# 		#call function
+			if(st.startswith("Hash")):
+				start_time = time.time()
+				res = st.replace("Hash","")
+				res=res.strip('[,()]\n').split(',')
+				table_name=res[0]
+				table_name = table[table_name]
+				col_name=res[1]
+				tname=res[0]
+				d=HashTable(tname,table_name,col_name)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				print(total_time)
 
-		elif(st.startswith("Btree")):
-			start_time = time.time()
-			res = st.replace("Btree","")
-			res=res.strip('[,()]').split(',')
-			table_name=res[0]
-			table_name = table[table_name]
-			col_name=res[1]
-			tname=res[0]
-			d=BtreesStruc(tname,table_name,col_name)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			print(total_time)
+			elif(st.startswith("Btree")):
+				start_time = time.time()
+				res = st.replace("Btree","")
+				res=res.strip('[,()]').split(',')
+				table_name=res[0]
+				table_name = table[table_name]
+				col_name=res[1]
+				tname=res[0]
+				d=BtreesStruc(tname,table_name,col_name)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				print(total_time)
 
-		elif(st.find("inputfromfile")!=-1):
-			start_time = time.time()
-			p = params[1]
-			filename = p[p.find('(')+1:p.find(')')]
-			d=importfile(filename)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			print(total_time)
-		
-		elif(st.find("outputtofile")!=-1):
-			start_time = time.time()
-			p = params[0]
-			args = p[p.find('(')+1:p.find(')')]
-			args=args.split(",")
-			table_name=table[args[0]]
-			filename=args[1]
-			exportfile(table_name,filename)
-			total_time = time.time() - start_time
-			print("time:")
-			print(total_time)
-
-		elif(params[1].startswith("select")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('select', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			tname = final_args[0]
-			d=getSelect(tname,table_name,final_args[1:])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
+			elif(st.find("inputfromfile")!=-1):
+				start_time = time.time()
+				p = params[1]
+				filename = p[p.find('(')+1:p.find(')')]
+				d=importfile(filename)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				print(total_time)
 			
+			elif(st.find("outputtofile")!=-1):
+				start_time = time.time()
+				p = params[0]
+				args = p[p.find('(')+1:p.find(')')]
+				args=args.split(",")
+				table_name=table[args[0]]
+				filename=args[1]
+				exportfile(table_name,filename)
+				total_time = time.time() - start_time
+				print("time:")
+				print(total_time)
 
-		elif(params[1].startswith("project")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('project', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=projection(table_name,column_names)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
+			elif(params[1].startswith("select")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('select', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				tname = final_args[0]
+				d=getSelect(tname,table_name,final_args[1:])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
+				
 
-		elif(params[1].startswith("avggroup")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('avggroup', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=avgGroup(table_name,column_names)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
-		
-		elif(params[1].startswith("avg")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('avg', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=getAverage(table_name,column_names[0])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			with open(finalOutputFile, "a+") as text_file:
-				text_file.write("\navg:"+str(d))
-			print(total_time)
+			elif(params[1].startswith("project")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('project', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=projection(table_name,column_names)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
 
-		elif(params[1].startswith("sumgroup")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('sumgroup', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=sumGroup(table_name,column_names)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
-		elif(params[1].startswith("sum")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('sum', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=getSum(table_name,column_names[0])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			with open(finalOutputFile, "a+") as text_file:
-				text_file.write("\nsum:"+str(d))
-			print(total_time)
-
-		elif(params[1].startswith("join")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('join', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name1 = table[final_args[0]]
-			table_name2 = table[final_args[1]]
-			args = final_args[2:]
-			d=getJoin(table_name1,table_name2,args)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
-
-		elif(params[1].startswith("movavg")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('movavg', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			length = len(final_args)
-			table_name = table[final_args[0]]
-			d=moving_average(table_name,final_args[1:length-1],final_args[length-1])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			mavg = ['{:.2f}'.format(x) for x in d]
-			str1=""
-			for i in mavg:
-				str1+="|"+i
-			with open(finalOutputFile, "a+") as text_file:
-				text_file.write("\nmoving average:"+str1)
-			print(total_time)
-
-		elif(params[1].startswith("movsum")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('movsum', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			length = len(final_args)
-			table_name = table[final_args[0]]
-			d=moving_sum(table_name,final_args[1:length-1],final_args[length-1])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			msum = ['{:.2f}'.format(x) for x in d]
-			str1=""
-			for i in msum:
-				str1+="|"+i
-			with open(finalOutputFile, "a+") as text_file:
-				text_file.write("\nmoving sum:"+str1)
-			print(total_time)
-
-		elif(params[1].startswith("sort")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('sort', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			d=sortColumns(table_name,final_args[1:])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
-
-		elif(params[1].startswith("countgroup")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('countgroup', "") for sub in p]
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args]
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=countGroup(table_name,final_args[1:])
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
+			elif(params[1].startswith("avggroup")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('avggroup', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=avgGroup(table_name,column_names)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
 			
-		elif(params[1].startswith("count")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('count', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name = table[final_args[0]]
-			column_names = final_args[1:]
-			d=getCount(table_name)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			with open(finalOutputFile, "a+") as text_file:
-				text_file.write("\ncount:"+str(d))
-			print(total_time)
+			elif(params[1].startswith("avg")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('avg', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=getAverage(table_name,column_names[0])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				with open(finalOutputFile, "a+") as text_file:
+					text_file.write("\navg:"+str(d))
+				print(total_time)
 
-		elif(params[1].startswith("concat")):
-			start_time = time.time()
-			p = params[1:]
-			res = [sub.replace('concat', "") for sub in p] 
-			stripped_list = [j.split(',') for j in res]
-			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
-			final_args = [[i for i in l if i] for l in final_args] 
-			final_args = [j for sub in final_args for j in sub]
-			final_args = [x.strip(' ') for x in final_args]
-			table_name1 = table[final_args[0]]
-			table_name2 = table[final_args[1]]
-			d=concat(table_name1,table_name2)
-			table[params[0]]=d
-			total_time = time.time() - start_time
-			print("time:")
-			exportfile(d,finalOutputFile)
-			print(total_time)
+			elif(params[1].startswith("sumgroup")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('sumgroup', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=sumGroup(table_name,column_names)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
+			elif(params[1].startswith("sum")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('sum', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=getSum(table_name,column_names[0])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				with open(finalOutputFile, "a+") as text_file:
+					text_file.write("\nsum:"+str(d))
+				print(total_time)
+
+			elif(params[1].startswith("join")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('join', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name1 = table[final_args[0]]
+				table_name2 = table[final_args[1]]
+				args = final_args[2:]
+				d=getJoin(table_name1,table_name2,args)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				# exportfile(d,finalOutputFile)
+				print(total_time)
+
+			elif(params[1].startswith("movavg")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('movavg', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				length = len(final_args)
+				table_name = table[final_args[0]]
+				d=moving_average(table_name,final_args[1:length-1],final_args[length-1])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				mavg = ['{:.2f}'.format(x) for x in d]
+				str1=""
+				for i in mavg:
+					str1+="|"+i
+				with open(finalOutputFile, "a+") as text_file:
+					text_file.write("\nmoving average:"+str1)
+				print(total_time)
+
+			elif(params[1].startswith("movsum")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('movsum', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				length = len(final_args)
+				table_name = table[final_args[0]]
+				d=moving_sum(table_name,final_args[1:length-1],final_args[length-1])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				msum = ['{:.2f}'.format(x) for x in d]
+				str1=""
+				for i in msum:
+					str1+="|"+i
+				with open(finalOutputFile, "a+") as text_file:
+					text_file.write("\nmoving sum:"+str1)
+				print(total_time)
+
+			elif(params[1].startswith("sort")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('sort', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				d=sortColumns(table_name,final_args[1:])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
+
+			elif(params[1].startswith("countgroup")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('countgroup', "") for sub in p]
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args]
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=countGroup(table_name,final_args[1:])
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)
+				
+			elif(params[1].startswith("count")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('count', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name = table[final_args[0]]
+				column_names = final_args[1:]
+				d=getCount(table_name)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				with open(finalOutputFile, "a+") as text_file:
+					text_file.write("\ncount:"+str(d))
+				print(total_time)
+
+			elif(params[1].startswith("concat")):
+				start_time = time.time()
+				p = params[1:]
+				res = [sub.replace('concat', "") for sub in p] 
+				stripped_list = [j.split(',') for j in res]
+				final_args = [[x.strip('[,()]\n') for x in l] for l in stripped_list]
+				final_args = [[i for i in l if i] for l in final_args] 
+				final_args = [j for sub in final_args for j in sub]
+				final_args = [x.strip(' ') for x in final_args]
+				table_name1 = table[final_args[0]]
+				table_name2 = table[final_args[1]]
+				d=concat(table_name1,table_name2)
+				table[params[0]]=d
+				total_time = time.time() - start_time
+				print("time:")
+				exportfile(d,finalOutputFile)
+				print(total_time)

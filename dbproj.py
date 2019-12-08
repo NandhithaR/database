@@ -16,19 +16,20 @@ collection_btree=[]
 hash_keys = {}
 btree_keys = {}
 
+"""This function is used to create a hashtable when the user requests an index to be created for a particular column name"""
 def HashTable(tname,table_name,col_name):
 	hashmap = defaultdict(lambda:[])
 	collection_hash = table_name
 	for row in range(len(collection_hash)):
 		hashmap[collection_hash[row][col_name]].append(row)
 	hash_keys[tname+ '.' + col_name] = hashmap
-
+"""This is used by select to check if there is a hashmap for the given column and return the value(s) reqeuested by select"""
 def Hash(tname, col_name, val):
 	hashmap = hash_keys[tname + '.' + col_name]
 	matched_rows = hashmap[float(val)]
 	print(matched_rows)
 	return matched_rows
-
+"""This function is used to create a btree when the user requests an index to be created for a particular column name"""
 def BtreesStruc(tname,table_name,col_name):
 	hashmap = defaultdict(lambda:[])
 	collection_btree = table_name
@@ -37,12 +38,16 @@ def BtreesStruc(tname,table_name,col_name):
 	btree_keys[tname+ '.' + col_name] = hashmap
 	btree.update(hashmap)
 
+"""This is used by select to check if there is a btree for the given column and return the value(s) reqeuested by select"""
 def Btrees(tname, col_name, val):
 	hashmap = btree_keys[tname + '.' + col_name]
 	matched_rows = hashmap[float(val)]
 	print(matched_rows)
 	return matched_rows
-
+"""getJoin takes two tables and joins them based on a contions. 
+This method supports join with multiple ands (with and without arithmetic operation on columns), 
+join with multiple or (with and without arithmetic operation on columns) 
+join with just one codition """
 def getJoin(table1,table2,args):
 	head1=table1.dtype.names
 	head2=table2.dtype.names
@@ -56,7 +61,6 @@ def getJoin(table1,table2,args):
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
-		# cols=[]
 		v=True
 		l=[]
 		f=[]
@@ -176,8 +180,6 @@ def getJoin(table1,table2,args):
 			else:
 				ll=ll&l
 
-			# print(relop)
-			# print(ll)
 			final_Count = 0
 			for index_l in range(len(data1[left_col])):
 				row_join = []
@@ -223,8 +225,6 @@ def getJoin(table1,table2,args):
 			elif '-' in left_col:
 				col =left_col.split('-')
 				left_col=col[0]
-				# for i in range(len(data1[col[0]])):
-				# 	temp1[i] = data1[col[0]][i]
 				temp1 = copy.deepcopy(data1[left_col])
 				for i in range(len(data1[col[0]])):
 					temp1[i] = data1[col[0]][i] - float(col[1])
@@ -328,7 +328,6 @@ def getJoin(table1,table2,args):
 		relop_list =[]
 		for i in range(len(cond)):
 			relop=findrelop(cond[i])
-			# relop_list[i]=relop
 			c=cond[i].split(relop)
 			(left_file,left_col) = c[0].split(".")
 			(left_file,left_col) = [x.strip(' ') for x in (left_file,left_col)]
@@ -384,9 +383,6 @@ def getJoin(table1,table2,args):
 					else:
 						join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
 						final_Count=final_Count+1
-
-		# join_ans=[]
-		# print(ll)
 
 	#single join
 	else:
@@ -446,40 +442,47 @@ def getJoin(table1,table2,args):
 	headers = []
 	for i in join_ans_headers:
 		headers.append(i)
-	# t_matrix = zip(*data)
 	table = tabulate(join_ans, headers, tablefmt="fancy_grid")
 	print(table)
 	d=join_ans
 	return d
 		
-#check if string can be converted to float
+"""Helper function to determine if a value is float or not"""
 def isfloat(value):
   try:
     float(value)
     return True
   except ValueError:
     return False
-#Import a vertical bar delimited file into an array-table
+
+""" importfile methond takes the filename and stores the information in file_array
+the headers (column names) can be determined usin dtype.names and the type of each column is dtype"""
 def importfile(filename):
 	file_array=np.genfromtxt(filename,dtype=None,delimiter='|',names=True)
 	dtypes=[file_array.dtype]
 	headers=[file_array.dtype.names]
 	return file_array
 	
-
+"""exportfile takes the table name and stores the information in a file names filename"""
 def exportfile(table_name,filename):
-	# x = np.arange(0, 10, 1)
-	c = np.savetxt(filename, table_name, delimiter ='|') 
-	# a = open(filename, 'r')# open file in read mode 
-	# print("the file contains:") 
-	# print(a.read()) 
-	# return a
+	head = ''
+	headers = table_name.dtype.names
+	for name in headers:
+		head+=('|'+name)
+	data = ''
+	for row in table_name:
+		for col in row:
+			data+='|' + str(col)
+		data+='\n'
+	head+='\n'+data
+	with open(filename, "a+") as text_file:
+		text_file.write(head)
+	
 
-#sort by columns
+""" sortColumns takes a table and one or more columns and returns the table in sorted order based on the columns"""
 def sortColumns(table_name,colname):
 	data = table_name
 	data.sort(order=colname)
-	print(data)
 	h = data.dtype.names
 	headers = []
 	for i in h:
@@ -488,6 +491,7 @@ def sortColumns(table_name,colname):
 	print(table)
 	return data
 
+"""Project function takes the table name and columns as parameters and returns a table with the column"""
 def projection(table_name,*colname):
 	data=table_name
 	h=[]
@@ -499,7 +503,8 @@ def projection(table_name,*colname):
 	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
 	print(table)
 	return data[colname[0]]
-
+"""findrelop is a helper function for getSelect and getJoin. It parses to determine 
+	the relation operation that is given as input"""
 def findrelop(s):
 	if '>' in s:
 		relop = '>'
@@ -515,6 +520,10 @@ def findrelop(s):
 		relop = '!='
 	return relop
 
+"""getSelect takes the table name and column names along with some condition and displays the result based on the condition given.
+This method supports select with multiple ands (with and without arithmetic operation on columns), 
+select with multiple or (with and without arithmetic operation on columns) 
+select with just one codition"""
 def getSelect(tname,table_name,args):
 	s = ""
 	data=table_name
@@ -527,12 +536,14 @@ def getSelect(tname,table_name,args):
 		l=[]
 		temp = []
 		for i in range(len(cond)):
+			flag=0
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
 			if c[0].isdigit():
 				cols=c[1]
 				const=c[0]
+				flag=1
 			else:
 				cols=c[0]
 				const=c[1]
@@ -568,16 +579,27 @@ def getSelect(tname,table_name,args):
 				temp = copy.deepcopy(data[cols])
 
 			if op == '>':
-				b = (temp>int(const))
-				print(b)
+				if(flag==1):
+					b = (temp<int(const))
+				else:
+					b = (temp>int(const))
 			elif op == '<':
-				b = temp<int(const)
+				if(flag==1):
+					b = temp>int(const)
+				else:
+					b = temp<int(const)
 			elif op == '=':
 				b = temp==int(const)
 			elif op == '<=':
-				b = temp<=int(const)
+				if(flag==1):
+					b = temp>=int(const)
+				else:
+					b = temp<=int(const)
 			elif op == '>=':
-				b = temp>=int(const)
+				if(flag==1):
+					b = temp<=int(const)
+				else:
+					b = temp>=int(const)
 			elif op == '!=':
 				b = temp!=int(const)
 			if len(l)==0:
@@ -588,7 +610,6 @@ def getSelect(tname,table_name,args):
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(data[l], headers, tablefmt="fancy_grid")
 		print(table)
 		return data[l]
@@ -598,8 +619,8 @@ def getSelect(tname,table_name,args):
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
 		l=[True]
-		
 		for i in range(len(cond)):
+			flag=0
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
@@ -607,6 +628,7 @@ def getSelect(tname,table_name,args):
 			if c[0].isdigit():
 				cols=c[1]
 				const=c[0]
+				flag=1
 			else:
 				cols=c[0]
 				const=c[1]
@@ -641,15 +663,27 @@ def getSelect(tname,table_name,args):
 			else:
 				temp = copy.deepcopy(data[cols])
 			if op == '>':
-				b = (temp>int(const))
+				if(flag==1):
+					b = (temp<int(const))
+				else:
+					b = (temp>int(const))
 			elif op == '<':
-				b = temp<int(const)
+				if(flag==1):
+					b = temp>int(const)
+				else:
+					b = temp<int(const)
 			elif op == '=':
 				b = temp==int(const)
 			elif op == '<=':
-				b = temp<=int(const)
+				if(flag==1):
+					b = temp>=int(const)
+				else:
+					b = temp<=int(const)
 			elif op == '>=':
-				b = temp>=int(const)
+				if(flag==1):
+					b = temp<=int(const)
+				else:
+					b = temp>=int(const)
 			elif op == '!=':
 				b = temp!=int(const)
 			l=l&b
@@ -663,6 +697,7 @@ def getSelect(tname,table_name,args):
 
 	elif '+' in s or '-' in s or '*' in s or '/' in s:
 		temp = []
+		flag=0
 		if '>' in s:
 			relop = '>'
 			s=s.split('>')
@@ -690,9 +725,11 @@ def getSelect(tname,table_name,args):
 		if s[0].isdigit():
 			const=s[0]
 			col=s[1]
+			flag=1
 		else:
 			const=s[1]
 			col=s[0]
+			
 		#split col-name arithmetic operation and const
 		if '+' in col:
 			col =col.split('+')
@@ -720,35 +757,44 @@ def getSelect(tname,table_name,args):
 				temp[i] = data[col[0]][i] * float(col[1])
 		
 		if relop=='>':
-			ans = data[temp>int(const)]
+			if(flag==1):
+				ans = data[temp<int(const)]
+			else:
+				ans = data[temp>int(const)]
 		elif relop=='<':
-			ans = data[temp<int(const)]
+			if(flag==1):
+				ans = data[temp>int(const)]
+			else:
+				ans = data[temp<int(const)]
 		elif relop=='=':
 			ans = data[temp==int(const)]
 		elif relop=='>=':
-			ans = data[temp<=int(const)]
+			if(flag==1):
+				ans = data[temp<=int(const)]
+			else:
+				ans = data[temp>=int(const)]
 		elif relop=='<=':
-			ans = data[temp<=int(const)]
+			if(flag==1):
+				ans = data[temp>=int(const)]
+			else:
+				ans = data[temp<=int(const)]
 		elif relop=='!=':
 			ans = data[temp!=int(const)]
 		h = ans.dtype.names
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(ans, headers, tablefmt="fancy_grid")
 		print(table)
 		return ans
 	elif 'or' in s:
-		print(s)
 		cond=s.split('or')
-		print(cond)
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
 		v=False
 		l=[v]
-		# const=[]
 		for i in range(len(cond)):
+			flag = 0
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
@@ -758,10 +804,17 @@ def getSelect(tname,table_name,args):
 			else:
 				cols=c[1]
 				const=c[0]
+				flag=1
 			if op == '>':
-				b = (data[cols]>float(const))
+				if(flag==1):
+					b = (data[cols]<float(const))
+				else:
+					b = (data[cols]>float(const))
 			elif op == '<':
-				b = data[cols]<float(const)
+				if(flag==1):
+					b = data[cols]>float(const)
+				else:
+					b = data[cols]<float(const)
 			elif op == '=':
 				if(str(tname)+'.'+str(cols) in hash_keys):
 					rows = Hash(tname,cols,const)
@@ -780,9 +833,15 @@ def getSelect(tname,table_name,args):
 				else:
 					b = data[cols]==float(const)
 			elif op == '<=':
-				b = data[cols]<=float(const)
+				if(flag==1):
+					b = data[cols]>=float(const)
+				else:
+					b = data[cols]<=float(const)
 			elif op == '>=':
-				b = data[cols]>=float(const)
+				if(flag==1):
+					b = data[cols]<=float(const)
+				else:
+					b = data[cols]>=float(const)
 			elif op == '!=':
 				b = data[cols]!=float(const)
 			l=l|b
@@ -790,7 +849,6 @@ def getSelect(tname,table_name,args):
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(data[l], headers, tablefmt="fancy_grid")
 		print(table)
 		return data[l]
@@ -799,11 +857,10 @@ def getSelect(tname,table_name,args):
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
-		# cols=[]
 		v=True
 		l=[v]
-		# const=[]
 		for i in range(len(cond)):
+			flag = 0
 			op=findrelop(cond[i])
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
@@ -813,12 +870,18 @@ def getSelect(tname,table_name,args):
 			else:
 				cols=c[1]
 				const=c[0]
+				flag =1 
 			if op == '>':
-				b = (data[cols]>float(const))
+				if(flag==1):
+					b = (data[cols]<float(const))
+				else:
+					b = (data[cols]>float(const))
 			elif op == '<':
-				b = data[cols]<float(const)
+				if(flag==1):
+					b = data[cols]>float(const)
+				else:
+					b = data[cols]<float(const)
 			elif op == '=':
-				# b = data[cols]==float(const)
 				if(str(tname)+'.'+str(cols) in hash_keys):
 					rows = Hash(tname,cols,const)
 					n=len(cols)
@@ -836,9 +899,15 @@ def getSelect(tname,table_name,args):
 				else:
 					b = data[cols]==float(const)
 			elif op == '<=':
-				b = data[cols]<=float(const)
+				if(flag==1):
+					b = data[cols]>=float(const)
+				else:
+					b = data[cols]<=float(const)
 			elif op == '>=':
-				b = data[cols]>=float(const)
+				if(flag==1):
+					b = data[cols]<=float(const)
+				else:
+					b = data[cols]>=float(const)
 			elif op == '!=':
 				b = data[cols]!=float(const)
 			l=l&b
@@ -846,7 +915,6 @@ def getSelect(tname,table_name,args):
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(data[l], headers, tablefmt="fancy_grid")
 		print(table)
 		return data[l]
@@ -875,17 +943,24 @@ def getSelect(tname,table_name,args):
 			relop = '!='
 			s=s.split('!=')
 			s = [x.strip(' ') for x in s]
-		
+		flag = 0
 		if s[0] in table_name.dtype.names:
 			col=s[0]
 			const=s[1]
 		else:
 			col=s[1]
 			const=s[0]
+			flag=1
 		if relop=='>':
-			ans = data[data[col]>float(const)]
+			if(flag == 1):
+				ans = data[data[col]<float(const)]
+			else:
+				ans = data[data[col]>float(const)]
 		elif relop=='<':
-			ans = data[data[col]<float(const)]
+			if(flag==1):
+				ans = data[data[col]>float(const)]
+			else:
+				ans = data[data[col]<float(const)]
 		elif relop=='=':
 			if(str(tname)+'.'+str(col) in hash_keys):
 				rows = Hash(tname,col,const)
@@ -896,33 +971,46 @@ def getSelect(tname,table_name,args):
 			else:
 				ans = data[data[col]==float(const)]
 		elif relop=='>=':
-			ans = data[data[col]<=float(const)]
+			if(flag==1):
+				ans = data[data[col]<=float(const)]
+			else:
+				ans = data[data[col]>=float(const)]
 		elif relop=='<=':
-			ans = data[data[col]<=float(const)]
+			if(flag==1):
+				ans = data[data[col]>=float(const)]
+			else:
+				ans = data[data[col]<=float(const)]
 		elif relop=='!=':
 			ans = data[data[col]!=float(const)]
 		h = ans.dtype.names
 		headers = []
 		for i in h:
 			headers.append(i)
-		# t_matrix = zip(*data)
 		table = tabulate(ans, headers, tablefmt="fancy_grid")
 		print(table)
 		return ans
 	
-
+"""getAverage method takes a table and column name and returns the average of that column"""
 def getAverage(table_name,colname):
 	data=table_name
 	average=np.mean(data[colname])
 	headers = [colname]
 	d = np.array([average])
+	print(d)
 	return average
-
+"""getCount method takes a table and column name and returns the count of that column"""
 def getCount(table_name):
 	num_rows = np.shape(table_name)[0]
 	print(num_rows)
 	return num_rows
-
+"""getSum method takes a table and column name and returns the sum of that column"""
+def getSum(tablename,colname):
+	data=tablename
+	s=np.sum(data[colname])
+	print(s)
+	return s
+"""Moving_Average function takes a table, an attribute and a constant k as it parameters.
+K-way moving aggregate of the attribute is returned."""
 def moving_average(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
@@ -930,7 +1018,8 @@ def moving_average(table_name,colname, n):
 	ret[n:] = ret[n:] - ret[:-n]
 	print(ret[n - 1:] / n)
 	return ret[n - 1:] / n
-
+"""Moving_Sum function takes a table, an attribute and a constant k as it parameters. K-
+way moving aggregate of the attribute is returned."""
 def moving_sum(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
@@ -938,7 +1027,9 @@ def moving_sum(table_name,colname, n):
 	ret[n:] = ret[n:] - ret[:-n]
 	print(ret[n-1:])
 	return ret[n - 1:]
-
+"""avgGroup function takes the table name as the first parameter, performs the aggregate
+functionality on the next single attribute passed to the function grouped by all the rest
+attributes."""
 def avgGroup(table_name, colname):
 	data=table_name
 	s=colname[0]
@@ -960,7 +1051,9 @@ def avgGroup(table_name, colname):
 	table = tabulate(tab, h, tablefmt="fancy_grid")
 	print(table)
 	return tab
-
+"""countGroup function takes the table name as the first parameter, performs the aggregate
+functionality on the next single attribute passed to the function grouped by all the rest
+attributes."""
 def countGroup(table_name, colname):
     data=table_name
     s=colname[0]
@@ -969,7 +1062,6 @@ def countGroup(table_name, colname):
     for i in colname:
         d.append(data[i])
     u_ij, inv_ij = np.unique(data[h[1:]], return_inverse=True)
-    # Create a totals array. You could do the fancy ijv_dtype thing if you wanted.
     totals=np.zeros(len(u_ij))
     for i in inv_ij:
         totals[i] = totals[i] + 1
@@ -980,12 +1072,9 @@ def countGroup(table_name, colname):
     print(table) 
     return tab
 
-def getSum(tablename,colname):
-	data=tablename
-	s=np.sum(data[colname])
-	print(s)
-	return s
-
+"""sumGroup function takes the table name as the first parameter, performs the aggregate
+functionality on the next single attribute passed to the function grouped by all the rest
+attributes."""
 def sumGroup(table_name, colname):
 	data=table_name
 	s=colname[0]
@@ -1001,6 +1090,8 @@ def sumGroup(table_name, colname):
 	print(table)
 	return tab
 
+"""Concat function takes two tables as input with the same schema and concatenate each
+column in the order."""
 def concat(table_name1,table_name2):
 	data1=table_name1
 	data2=table_name2
@@ -1012,17 +1103,23 @@ def concat(table_name1,table_name2):
 		headers.append(i)
 	table = tabulate(c, headers,tablefmt="fancy_grid")
 	print(table)
-	print(c)
 	return c
 
 
+
+"""The following main functions takes inputs from the user till the user enters "quit" 
+	the table is a hashmap that stores all intermediate results for the quries entered by the user
+	
+	All outputs(intemediate results) are stored in finalOutputFile"""
+
 if __name__ == "__main__":
 	table={}
+	finalOutputFile = 'finalOutputFile'
 	st = ""
-	print("DATABASE PROJECT:\nThis program supports the following functionalities\n \n1.inputfromfile\n2.outputtofile")
-	print("Enter quit to exit")
+	print("DATABASE PROJECT:\nThis program supports the following functionalities\n \n1.inputfromfile\n2.average\n3.sum\n4.count\n5.averageGroup\n6.sumGroup\n7.countGroup\n8.movingAvg\n9.movingSum\n10.select\n11.project\n12.join\n13.Hash\n14.Btree\n15.outputtofile\n16.sort\n17.concat")
+	print("To exit enter quit")
 	while(st!="quit"):
-		st = raw_input()
+		st = raw_input("Enter Query:")
 		params=st.split(":=")
 		params = [x.strip(' ') for x in params]
 		#call function
@@ -1091,7 +1188,9 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
+			
 
 		elif(params[1].startswith("project")):
 			start_time = time.time()
@@ -1108,6 +1207,7 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
 
 		elif(params[1].startswith("avggroup")):
@@ -1125,6 +1225,7 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
 		
 		elif(params[1].startswith("avg")):
@@ -1142,6 +1243,8 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			with open(finalOutputFile, "a+") as text_file:
+				text_file.write("\navg:"+str(d))
 			print(total_time)
 
 		elif(params[1].startswith("sumgroup")):
@@ -1159,6 +1262,25 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
+			print(total_time)
+		elif(params[1].startswith("sum")):
+			start_time = time.time()
+			p = params[1:]
+			res = [sub.replace('sum', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			final_args = [x.strip(' ') for x in final_args]
+			table_name = table[final_args[0]]
+			column_names = final_args[1:]
+			d=getSum(table_name,column_names[0])
+			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			with open(finalOutputFile, "a+") as text_file:
+				text_file.write("\nsum:"+str(d))
 			print(total_time)
 
 		elif(params[1].startswith("join")):
@@ -1177,6 +1299,7 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
 
 		elif(params[1].startswith("movavg")):
@@ -1194,6 +1317,12 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			mavg = ['{:.2f}'.format(x) for x in d]
+			str1=""
+			for i in mavg:
+				str1+="|"+i
+			with open(finalOutputFile, "a+") as text_file:
+				text_file.write("\nmoving average:"+str1)
 			print(total_time)
 
 		elif(params[1].startswith("movsum")):
@@ -1211,6 +1340,12 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			msum = ['{:.2f}'.format(x) for x in d]
+			str1=""
+			for i in msum:
+				str1+="|"+i
+			with open(finalOutputFile, "a+") as text_file:
+				text_file.write("\nmoving sum:"+str1)
 			print(total_time)
 
 		elif(params[1].startswith("sort")):
@@ -1227,6 +1362,7 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
 
 		elif(params[1].startswith("countgroup")):
@@ -1244,9 +1380,10 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)
 			
-		elif(params[1].startswith("count(")):
+		elif(params[1].startswith("count")):
 			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('count', "") for sub in p] 
@@ -1261,6 +1398,8 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			with open(finalOutputFile, "a+") as text_file:
+				text_file.write("\ncount:"+str(d))
 			print(total_time)
 
 		elif(params[1].startswith("concat")):
@@ -1278,4 +1417,5 @@ if __name__ == "__main__":
 			table[params[0]]=d
 			total_time = time.time() - start_time
 			print("time:")
+			exportfile(d,finalOutputFile)
 			print(total_time)

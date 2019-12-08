@@ -6,15 +6,41 @@ from itertools import groupby
 from collections import defaultdict
 # from BTrees.OOBTree import OOBTree
 import re
+import copy
+import time
 
 hashmap={}
 # btree = OOBTree()
-collection=[]
+collection_hash={}
+collection_btree=[]
 counter = 0
 def Hash(table_name,col_name):
-	key, value = col_name, table_name[col_name]
-	hashmap[key] = value
+	key = col_name
+	value = table_name[col_name]
+	if key in hashmap:
+		collection_hash[hashmap[key]]['value'] = value
+	else:
+		hashmap[key] = len(collection_hash) + 1
+		collection_hash[hashmap[key]]['value'] = value
 
+	print(collection_hash)
+
+	# collection_hash = np.array([(key,value)])
+	# if key in hashmap:
+	# 	collection_hash[hashmap[key]]['value'] = value
+	# else:
+	# 	collection = np.append(collection, np.array([(key,value)], dtype=collection.dtype))
+	# 	hashmap[key] = len(collection) - 1 
+	# if key in hashmap and hashmap[key] != -1:
+	# 	print(collection[hashmap[key]]['value'])
+	# else:
+	# 	search_answers.append("not present")
+	# 	print("not present")
+
+	# if key in hashmap:
+	# 	collection_hash[hashmap[key]]['value'] = value
+	# else:
+	# 	collection_hash = np.append(collection_hash, np.array([(key,value)]))
 # def Btree(data,colname):
 
 def getJoin(table1,table2,args):
@@ -34,97 +60,150 @@ def getJoin(table1,table2,args):
 		v=True
 		l=[]
 		f=[]
+		ll=[]
 		relop_list =[]
 		for i in range(len(cond)):
 			relop=findrelop(cond[i])
-			# relop_list[i]=relop
 			c=cond[i].split(relop)
 			c=[x.strip(' ') for x in c]
 			(left_file,left_col) = c[0].split(".")
 			(left_file,left_col) = [x.strip(' ') for x in (left_file,left_col)]
 			(right_file,right_col) = c[1].split(".")
 			(right_file,right_col) = [x.strip(' ') for x in (right_file,right_col)]
-			
+			temp1 = []
+			temp2 = []
 			l=[]
 			if('+' in s or '-' in s or '*' in s or '/' in s):
 				if '+' in left_col:
 					col =left_col.split('+')
 					col=[x.strip(' ') for x in col]
 					left_col=col[0]
+					temp1 = data1[left_col]
+					for k in range(len(data1[col[0]])):
+						temp1[k] = data1[col[0]][k] + int(col[1])
 					for j in range(len(data1[col[0]])):
-						data1[col[0]][j] = data1[col[0]][j] + int(col[1])
+						temp1[j] = data1[col[0]][j] + int(col[1])
 				if '-' in left_col:
 					col =left_col.split('-')
 					col=[x.strip(' ') for x in col]
 					left_col=col[0]
+					temp1 = data1[left_col]
+					for k in range(len(data1[col[0]])):
+						temp1[k] = data1[col[0]][k] + int(col[1])
 					for j in range(len(data1[col[0]])):
-						data1[col[0]][j] = data1[col[0]][j] - int(col[1])
+						temp1[j] = data1[col[0]][j] - int(col[1])
 				if '/' in left_col:
 					col =left_col.split('/')
 					col=[x.strip(' ') for x in col]
 					left_col=col[0]
+					temp1 = data1[left_col]
+					for k in range(len(data1[col[0]])):
+						temp1[k] = data1[col[0]][k] + int(col[1])
 					for j in range(len(data1[col[0]])):
-						data1[col[0]][j] = data1[col[0]][j] / float(col[1])
+						temp1[j] = data1[col[0]][j] / float(col[1])
 				if '*' in left_col:
 					col =left_col.split('*')
 					col=[x.strip(' ') for x in col]
 					left_col=col[0]
+					temp1 = data1[left_col]
+					for k in range(len(data1[col[0]])):
+						temp1[k] = data1[col[0]][k] + int(col[1])
 					for j in range(len(data1[col[0]])):
-						data1[col[0]][j] = data1[col[0]][j] * float(col[1])
+						temp1[j] = data1[col[0]][j] * float(col[1])
 
 				if '+' in right_col:
 					col =right_col.split('+')
 					col=[x.strip(' ') for x in col]
 					right_col=col[0]
+					temp2 = data2[right_col]
+					for k in range(len(data2[col[0]])):
+						temp2[k] = data2[col[0]][k] + int(col[1])
 					for j in range(len(data2[col[0]])):
-						data2[col[0]][j] = data2[col[0]][j] + int(col[1])
+						temp2[j] = data2[col[0]][j] + int(col[1])
 				if '-' in right_col:
 					col =right_col.split('-')
 					col=[x.strip(' ') for x in col]
 					right_col=col[0]
+					temp2 = data2[right_col]
+					for k in range(len(data2[col[0]])):
+						temp2[k] = data2[col[0]][k] + int(col[1])
 					for j in range(len(data2[col[0]])):
-						data2[col[0]][j] = data2[col[0]][j] - int(col[1])
+						temp2[j] = data2[col[0]][j] - int(col[1])
 				if '/' in right_col:
 					col =right_col.split('/')
 					col=[x.strip(' ') for x in col]
 					right_col=col[0]
+					temp2 = data2[right_col]
+					for k in range(len(data2[col[0]])):
+						temp2[k] = data2[col[0]][k] + int(col[1])
 					for j in range(len(data2[col[0]])):
-						data2[col[0]][j] = data2[col[0]][j] / float(col[1])
+						temp2[j] = data2[col[0]][j] / float(col[1])
 				if '*' in right_col:
 					col =right_col.split('*')
 					col=[x.strip(' ') for x in col]
 					right_col=col[0]
+					temp2 = data2[right_col]
+					for k in range(len(data2[col[0]])):
+						temp2[k] = data2[col[0]][k] + int(col[1])
 					for j in range(len(data2[col[0]])):
-						data2[col[0]][j] = data2[col[0]][j] * float(col[1])
+						temp2[j] = data2[col[0]][j] * float(col[1])
+				if ('+' not in left_col) or ('-' not in left_col) or ('/' not in left_col) or ('*' not in left_col):
+					temp1 = data1[left_col]
+				if ('+' not in right_col) or ('-' not in right_col) or ('/' not in right_col) or ('*' not in right_col):
+					temp2 = data2[right_col]
 			l=[]
-			for d2 in data2[right_col]:
+			for index_left in range(len(data1[left_col])):
+				row_join = []
 				b_rows=[]
-				for d1 in data1[left_col]:
+				count = 0
+				for index_right in range(len(data2[right_col])):
 					if relop == '<':
-						b=(d1<d2)
-					if relop == '<=':
-						b=(d1<=d2)
-					if relop == '>':
-						b=(d1>d2)
-					if relop == '>=':
-						b=(d1>=d2)
-					if relop == '=':
-						b=(d1==d2)
-					if relop == '!=':
-						b=(d1!=d2)
+						b=(temp1[index_left]<temp2[index_right])
+					elif relop == '<=':
+						b=(temp1[index_left]<=temp2[index_right])
+					elif relop == '>':
+						b=(temp1[index_left]>temp2[index_right])
+					elif relop == '>=':
+						b=(temp1[index_left]>=temp2[index_right])
+					elif relop == '=':
+						b=(temp1[index_left]==temp2[index_right])
+					elif relop == '!=':
+						b=(temp1[index_left]!=temp2[index_right])
 					b_rows.append(b)
 				l.append(b_rows)
-			f.append(l)
-		ll=np.array(f)
-		for row in ll:
-			# print(row)
-			ll = ll & row
-		# print(ll[0])
-		l=[]
-		for row in ll[0]:
-			l.append(np.bitwise_or.reduce(row))
-		# print(l)
-		# d = np.array(l)			
+			if len(ll)==0:
+				ll = np.array(l)
+			else:
+				ll=ll&l
+
+			# print(relop)
+			# print(ll)
+			final_Count = 0
+			for index_l in range(len(data1[left_col])):
+				row_join = []
+				count = 0
+				for index_r in range(len(data2[right_col])):
+					if(ll[index_l][index_r]):
+						#TBD: Change column names
+						first_dtype = {}
+						second_dtype = {}
+						for col in data1.dtype.names:
+							first_dtype[col] = str(left_file)+'_'+str(col)
+						for col in data2.dtype.names:
+							second_dtype[col] = str(right_file)+'_'+str(col)
+						new_data1 = rfn.rename_fields(data1[index_l], first_dtype)
+						new_data2 = rfn.rename_fields(data2[index_r], second_dtype)
+						if count:
+							row_join = np.concatenate((row_join, rfn.merge_arrays((new_data1,new_data2), flatten=True)))
+						else:
+							row_join = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+							count=count+1
+				if len(row_join):
+					if final_Count:
+						join_ans = np.concatenate((join_ans, row_join))
+					else:
+						join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+						final_Count=final_Count+1
 	#single join with arithmetic
 	elif ('+' in s or '-' in s or '*' in s or '/' in s):
 		relop = findrelop(s)
@@ -132,91 +211,120 @@ def getJoin(table1,table2,args):
 		(left,right) = [x.strip(' ') for x in (left,right)]
 		(left_file,left_col) = left.split(".")
 		(right_file,right_col) = right.split(".")
+		temp1 = []
+		temp2 = []
 		if('+' in s or '-' in s or '*' in s or '/' in s):
 			if '+' in left_col:
 				col =left_col.split('+')
 				left_col=col[0]
+				temp1 = copy.deepcopy(data1[left_col])
 				for i in range(len(data1[col[0]])):
-					data1[col[0]][i] = data1[col[0]][i] + int(col[1])
-			if '-' in left_col:
+					temp1[i] = data1[col[0]][i] + float(col[1])
+			elif '-' in left_col:
 				col =left_col.split('-')
 				left_col=col[0]
+				# for i in range(len(data1[col[0]])):
+				# 	temp1[i] = data1[col[0]][i]
+				temp1 = copy.deepcopy(data1[left_col])
 				for i in range(len(data1[col[0]])):
-					data1[col[0]][i] = data1[col[0]][i] - int(col[1])
-			if '/' in left_col:
+					temp1[i] = data1[col[0]][i] - float(col[1])
+			elif '/' in left_col:
 				col =left_col.split('/')
 				left_col=col[0]
+				temp1 = copy.deepcopy(data1[left_col])
 				for i in range(len(data1[col[0]])):
-					data1[col[0]][i] = data1[col[0]][i] / float(col[1])
-			if '*' in left_col:
+					temp1[i] = data1[col[0]][i] / float(col[1])
+			elif '*' in left_col:
 				col =left_col.split('*')
 				left_col=col[0]
+				temp1 = copy.deepcopy(data1[left_col])
 				for i in range(len(data1[col[0]])):
-					data1[col[0]][i] = data1[col[0]][i] * float(col[1])
+					temp1[i] = data1[col[0]][i] * float(col[1])
+			else:
+				temp1 = copy.deepcopy(data1[left_col])
 
 		if('+' in s or '-' in s or '*' in s or '/' in s):
 			if '+' in right_col:
 				col =right_col.split('+')
 				right_col=col[0]
+				temp2 = data2[right_col]
 				for i in range(len(data2[col[0]])):
-					data2[col[0]][i] = data2[col[0]][i] + int(col[1])
-			if '-' in right_col:
+					temp2[i] = data2[col[0]][i] + float(col[1])
+			elif '-' in right_col:
 				col =right_col.split('-')
 				right_col=col[0]
+				temp2 = data2[right_col]
 				for i in range(len(data2[col[0]])):
-					data2[col[0]][i] = data2[col[0]][i] - int(col[1])
-			if '/' in right_col:
+					temp2[i] = data2[col[0]][i] - float(col[1])
+			elif '/' in right_col:
 				col =right_col.split('/')
 				right_col=col[0]
+				temp2 = data2[right_col]
 				for i in range(len(data2[col[0]])):
-					data2[col[0]][i] = data2[col[0]][i] / float(col[1])
-			if '*' in right_col:
+					temp2[i] = data2[col[0]][i] / float(col[1])
+			elif '*' in right_col:
 				col =right_col.split('*')
 				right_col=col[0]
+				temp2 = data2[right_col]
 				for i in range(len(data2[col[0]])):
-					data2[col[0]][i] = data2[col[0]][i] * float(col[1])
+					temp2[i] = data2[col[0]][i] * float(col[1])
+			else:
+				temp2 = data2[right_col]
+
 		l=[]
-		for d2 in data2[right_col]:
-			for d1 in data1[left_col]:
+		arrays_left=[]
+		arrays_right=[]
+		join_ans =[]
+		final_Count = 0
+		for i in range(len(data1[left_col])):
+			b_rows=[]
+			row_join = []
+			count = 0
+			for j in range(len(data2[right_col])):
 				if relop == '<':
-					b=(d1<d2)
-					if(b==True):
-						break
-				if relop == '<=':
-					b=(d1<=d2)
-					if(b==True):
-						break
-				if relop == '>':
-					b=(d1>d2)
-					if(b==True):
-						break
-				if relop == '>=':
-					b=(d1>=d2)
-					if(b==True):
-						break
-				if relop == '=':
-					b=(d1==d2)
-					if(b==True):
-						break
-				if relop == '!=':
-					b=(d1!=d2)
-					if(b==True):
-						break
-			l.append(b)
-		# print(l)
+					b=(temp1[i]<temp2[j])
+				elif relop == '<=':
+					b=(temp1[i]<=temp2[j])
+				elif relop == '>':
+					b=(temp1[i]>temp2[j])
+				elif relop == '>=':
+					b=(temp1[i]>=temp2[j])
+				elif relop == '=':
+					b=(temp1[i]==temp2[j])
+				elif relop == '!=':
+					b=(temp1[i]!=temp2[j])
+				
+				if b:
+					#TBD: Change column names
+					first_dtype = {}
+					second_dtype = {}
+					for col in data1.dtype.names:
+						first_dtype[col] = str(left_file)+'_'+str(col)
+					for col in data2.dtype.names:
+						second_dtype[col] = str(right_file)+'_'+str(col)
+					new_data1 = rfn.rename_fields(data1[i], first_dtype)
+					new_data2 = rfn.rename_fields(data2[j], second_dtype)
+					if count:
+						row_join = np.concatenate((row_join, rfn.merge_arrays((new_data1,new_data2), flatten=True)))
+					else:
+						row_join = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+						count=count+1
+			if len(row_join):
+				if final_Count:
+					join_ans = np.concatenate((join_ans, row_join))
+				else:
+					join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+					final_Count=final_Count+1
 		
 	#multiple join
 	elif 'and' in s:
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
-		print(cond)
 		cols=[]
 		v=True
-		l=[]
-		f=[]
-		column_left_list = []
-		column_right_list = []
+		
+		ll=[]
 		relop_list =[]
 		for i in range(len(cond)):
 			relop=findrelop(cond[i])
@@ -227,41 +335,58 @@ def getJoin(table1,table2,args):
 			(right_file,right_col) = c[1].split(".")
 			(right_file,right_col) = [x.strip(' ') for x in (right_file,right_col)]
 			l=[]
-			for d2 in data2[right_col]:
+			for i in range(len(data1[left_col])):
+				row_join = []
 				b_rows=[]
-				for d1 in data1[left_col]:
+				count = 0
+				for j in range(len(data2[right_col])):
 					if relop == '<':
-						b=(d1<d2)
-					if relop == '<=':
-						b=(d1<=d2)
-					if relop == '>':
-						b=(d1>d2)
-					if relop == '>=':
-						b=(d1>=d2)
-					if relop == '=':
-						b=(d1==d2)
-					if relop == '!=':
-						b=(d1!=d2)
+						b=(data1[i][left_col]<data2[j][right_col])
+					elif relop == '<=':
+						b=(data1[i][left_col]<=data2[j][right_col])
+					elif relop == '>':
+						b=(data1[i][left_col]>data2[j][right_col])
+					elif relop == '>=':
+						b=(data1[i][left_col]>=data2[j][right_col])
+					elif relop == '=':
+						b=(data1[i][left_col]==data2[j][right_col])
+					elif relop == '!=':
+						b=(data1[i][left_col]!=data2[j][right_col])
 					b_rows.append(b)
-				# print(b_rows)
-				# ll = np.array(b_rows)
-				# if len(l)==0:
-				# 	l=np.array(ll)
-				# else:
-				# 	l=l&ll
-				# print(l)
 				l.append(b_rows)
-			f.append(l)
-			#print(l)
-		#print(f)
-		ll=np.array(f)
-		for row in ll:
-			# print(row)
-			ll = ll & row
-		# print(ll[0])
-		l=[]
-		for row in ll[0]:
-			l.append(np.bitwise_or.reduce(row))
+			if len(ll)==0:
+				ll = np.array(l)
+			else:
+				ll=ll&l
+			final_Count = 0
+			for k in range(len(data1[left_col])):
+				row_join = []
+				count = 0
+				for li in range(len(data2[right_col])):
+					if(ll[k][li]):
+						#TBD: Change column names
+						first_dtype = {}
+						second_dtype = {}
+						for col in data1.dtype.names:
+							first_dtype[col] = str(left_file)+'_'+str(col)
+						for col in data2.dtype.names:
+							second_dtype[col] = str(right_file)+'_'+str(col)
+						new_data1 = rfn.rename_fields(data1[k], first_dtype)
+						new_data2 = rfn.rename_fields(data2[li], second_dtype)
+						if count:
+							row_join = np.concatenate((row_join, rfn.merge_arrays((new_data1,new_data2), flatten=True)))
+						else:
+							row_join = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+							count=count+1
+				if len(row_join):
+					if final_Count:
+						join_ans = np.concatenate((join_ans, row_join))
+					else:
+						join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+						final_Count=final_Count+1
+
+		# join_ans=[]
+		# print(ll)
 
 	#single join
 	else:
@@ -270,66 +395,62 @@ def getJoin(table1,table2,args):
 		(left,right) = [x.strip(' ') for x in (left,right)]
 		(left_file,left_col) = left.split(".")
 		(right_file,right_col) = right.split(".")
-		print(right_col)
 		b=True
 		l=[]
+		f=[]
 		value=[]
-		for d2 in data2[right_col]:
-			for d1 in data1[left_col]:
+		arrays_left=[]
+		arrays_right=[]
+		join_ans =[]
+		final_Count = 0
+		for i in range(len(data1[left_col])):
+			b_rows=[]
+			row_join = []
+			count = 0
+			for j in range(len(data2[right_col])):
 				if relop == '<':
-					b=(d1<d2)
-					if(b==True):
-						break
-				if relop == '<=':
-					b=(d1<=d2)
-					if(b==True):
-						break
-				if relop == '>':
-					b=(d1>d2)
-					if(b==True):
-						break
-				if relop == '>=':
-					b=(d1>=d2)
-					if(b==True):
-						break
-				if relop == '=':
-					b=(d1==d2)
-					if(b==True):
-						break
-				if relop == '!=':
-					b=(d1!=d2)
-					if(b==True):
-						break
-			l.append(b)
-		print(l)
-	second = []
-	first = []
-	for i in data1:
-		first.append(i)
-	for t in range(len(l)):
-		if l[t]:
-			second.append(data2[0:][t])
-		# else:
-		# 	second.append([0] * len(data2[0]))
-		#change the dtypes.names of the two arrays and then merge them
-	first_dtype_name=[]
-	second_dtype_name = []
-	for i in data1.dtype.names:
-		first_dtype_name.append(str(left_file)+'_'+str(i))
-	for i in data2.dtype.names:
-		second_dtype_name.append(str(right_file)+'_'+str(i))
-
-	first_final = np.array(first, dtype=data1.dtype)
-	first_final.dtype.names = first_dtype_name
-
-	second_final = np.array(second, dtype=data2.dtype)
-	second_final.dtype.names = second_dtype_name
-		
-	data=[first_final,second_final]
-
-	d=rfn.merge_arrays([first_final,second_final])
-	print(d)
-	return rfn.merge_arrays([second_final,first_final])
+					b=(data1[i][left_col]<data2[j][right_col])
+				elif relop == '<=':
+					b=(data1[i][left_col]<=data2[j][right_col])
+				elif relop == '>':
+					b=(data1[i][left_col]>data2[j][right_col])
+				elif relop == '>=':
+					b=(data1[i][left_col]>=data2[j][right_col])
+				elif relop == '=':
+					b=(data1[i][left_col]==data2[j][right_col])
+				elif relop == '!=':
+					b=(data1[i][left_col]!=data2[j][right_col])
+				
+				if b:
+					#TBD: Change column names
+					first_dtype = {}
+					second_dtype = {}
+					for col in data1.dtype.names:
+						first_dtype[col] = str(left_file)+'_'+str(col)
+					for col in data2.dtype.names:
+						second_dtype[col] = str(right_file)+'_'+str(col)
+					new_data1 = rfn.rename_fields(data1[i], first_dtype)
+					new_data2 = rfn.rename_fields(data2[j], second_dtype)
+					if count:
+						row_join = np.concatenate((row_join, rfn.merge_arrays((new_data1,new_data2), flatten=True)))
+					else:
+						row_join = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+						count=count+1
+			if len(row_join):
+				if final_Count:
+					join_ans = np.concatenate((join_ans, row_join))
+				else:
+					join_ans = rfn.merge_arrays((new_data1,new_data2), flatten=True)
+					final_Count=final_Count+1
+	join_ans_headers= join_ans.dtype.names
+	headers = []
+	for i in join_ans_headers:
+		headers.append(i)
+	# t_matrix = zip(*data)
+	table = tabulate(join_ans, headers, tablefmt="fancy_grid")
+	print(table)
+	d=join_ans
+	return d
 		
 #check if string can be converted to float
 def isfloat(value):
@@ -347,10 +468,10 @@ def importfile(filename):
 	return file_array
 	
 
-def exportfile():
+def exportfile(filename1,filename2):
 	x = np.arange(0, 10, 1)
-	c = np.savetxt('geekfile1.txt', x, delimiter ='|') 
-	a = open("geekfile1.txt", 'r')# open file in read mode 
+	c = np.savetxt(filename2, x, delimiter ='|') 
+	a = open(filename2, 'r')# open file in read mode 
 	print("the file contains:") 
 	print(a.read()) 
 	return a
@@ -360,6 +481,13 @@ def sortColumns(table_name,colname):
 	data = table_name
 	data.sort(order=colname)
 	print(data)
+	h = data.dtype.names
+	headers = []
+	for i in h:
+		headers.append(i)
+	# t_matrix = zip(*data)
+	table = tabulate(data, headers, tablefmt="fancy_grid")
+	print(table)
 	return data
 
 def projection(table_name,*colname):
@@ -448,7 +576,13 @@ def getSelect(table_name,args):
 			elif op == '!=':
 				b = data[cols]!=int(const)
 			l=l|b
-		print(data[l])
+		h = data.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(data[l], headers, tablefmt="fancy_grid")
+		print(table)
 		return data[l]
 		
 	elif ('and' in s) and ('+' in s or '-' in s or '*' in s or '/' in s):
@@ -503,11 +637,15 @@ def getSelect(table_name,args):
 			elif op == '!=':
 				b = data[cols]!=int(const)
 			l=l&b
-		print(data[l])
+		h = data.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(data[l], headers, tablefmt="fancy_grid")
+		print(table)
 		return data[l]
 	elif '+' in s or '-' in s or '*' in s or '/' in s:
-		# s=data[data[col]>int(r_const)]
-		# print(s)
 		if '>' in s:
 			relop = '>'
 			s=s.split('>')
@@ -572,10 +710,18 @@ def getSelect(table_name,args):
 			ans = data[data[col[0]]<=int(const)]
 		elif relop=='!=':
 			ans = data[data[col[0]]!=int(const)]
-		print(ans)
+		h = ans.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(ans, headers, tablefmt="fancy_grid")
+		print(table)
 		return ans
 	elif 'or' in s:
+		print(s)
 		cond=s.split('or')
+		print(cond)
 		cond = [x.strip(' ') for x in cond]
 		cond = [x.strip('[,()]') for x in cond]
 		v=False
@@ -586,38 +732,33 @@ def getSelect(table_name,args):
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
 			if c[0] in data.dtype.names:
-				# cols.append(c[0])
 				cols=c[0]
-				# const.append(c[1])
 				const=c[1]
 			else:
-				# cols.append(c[1])
 				cols=c[1]
-				# const.append(c[0])
 				const=c[0]
 			if op == '>':
-				b = (data[cols]>int(const))
+				b = (data[cols]>float(const))
 			elif op == '<':
-				b = data[cols]<int(const)
+				b = data[cols]<float(const)
 			elif op == '=':
-				b = data[cols]==int(const)
+				b = data[cols]==float(const)
 			elif op == '<=':
-				b = data[cols]<=int(const)
+				b = data[cols]<=float(const)
 			elif op == '>=':
-				b = data[cols]>=int(const)
+				b = data[cols]>=float(const)
 			elif op == '!=':
-				b = data[cols]!=int(const)
+				b = data[cols]!=float(const)
 			l=l|b
-			# print(l)
-		print(data[l])
+		h = data.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(data[l], headers, tablefmt="fancy_grid")
+		print(table)
 		return data[l]
 
-			# if cond[i] in table_name[0][0]:
-			# 	cols.append(cond[i])
-			# elif cond[i] in ['>','<','=','<=','>=']:
-			# 	op.append(cond[i])
-			# elif cond[i].isdigit():
-			# 	const.append(cond[i])
 	elif 'and' in s:
 		cond=s.split('and')
 		cond = [x.strip(' ') for x in cond]
@@ -631,29 +772,31 @@ def getSelect(table_name,args):
 			c=cond[i].split(op)
 			c = [x.strip(' ') for x in c]
 			if c[0] in data.dtype.names:
-				# cols.append(c[0])
 				cols=c[0]
-				# const.append(c[1])
 				const=c[1]
 			else:
-				# cols.append(c[1])
 				cols=c[1]
-				# const.append(c[0])
 				const=c[0]
 			if op == '>':
-				b = (data[cols]>int(const))
+				b = (data[cols]>float(const))
 			elif op == '<':
-				b = data[cols]<int(const)
+				b = data[cols]<float(const)
 			elif op == '=':
-				b = data[cols]==int(const)
+				b = data[cols]==float(const)
 			elif op == '<=':
-				b = data[cols]<=int(const)
+				b = data[cols]<=float(const)
 			elif op == '>=':
-				b = data[cols]>=int(const)
+				b = data[cols]>=float(const)
 			elif op == '!=':
-				b = data[cols]!=int(const)
+				b = data[cols]!=float(const)
 			l=l&b
-		print(data[l])
+		h = data.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(data[l], headers, tablefmt="fancy_grid")
+		print(table)
 		return data[l]
 	else:
 		if '>' in s:
@@ -688,31 +831,32 @@ def getSelect(table_name,args):
 			col=s[1]
 			const=s[0]
 		if relop=='>':
-			ans = data[data[col]>int(const)]
+			ans = data[data[col]>float(const)]
 		elif relop=='<':
-			ans = data[data[col]<int(const)]
+			ans = data[data[col]<float(const)]
 		elif relop=='=':
-			#check if in hashmap
-			# if(col in hashmap):
-			# 	hashmap.get()
-			ans = data[data[col]==int(const)]
+			ans = data[data[col]==float(const)]
 		elif relop=='>=':
-			ans = data[data[col]<=int(const)]
+			ans = data[data[col]<=float(const)]
 		elif relop=='<=':
-			ans = data[data[col]<=int(const)]
+			ans = data[data[col]<=float(const)]
 		elif relop=='!=':
-			ans = data[data[col]!=int(const)]
-		print(ans)
+			ans = data[data[col]!=float(const)]
+		h = ans.dtype.names
+		headers = []
+		for i in h:
+			headers.append(i)
+		# t_matrix = zip(*data)
+		table = tabulate(ans, headers, tablefmt="fancy_grid")
+		print(table)
 		return ans
-	# h = data.dtype.names
-	# table = tabulate(ans, h, tablefmt="fancy_grid")
-	# return ans
 	
-#selection, projection, count, sum and avg aggregates
+
 def getAverage(table_name,colname):
 	data=table_name
 	average=np.mean(data[colname])
-	print(average)
+	headers = [colname]
+	d = np.array([average])
 	return average
 def getCount(table_name):
 	num_rows = np.shape(table_name)[0]
@@ -722,18 +866,40 @@ def getCount(table_name):
 def moving_average(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
-	n=int(n)
+	n=float(n)
 	ret[n:] = ret[n:] - ret[:-n]
-	print(ret[n:])
+	print(ret[n - 1:] / n)
 	return ret[n - 1:] / n
 
 def moving_sum(table_name,colname, n):
 	data = table_name
 	ret = np.cumsum(data[colname[0]], dtype=float)
-	n=int(n)
+	n=float(n)
 	ret[n:] = ret[n:] - ret[:-n]
 	print(ret[n-1:])
 	return ret[n - 1:]
+
+def avgGroup(table_name, colname):
+	data=table_name
+	s=colname[0]
+	h=colname
+	d=[]
+	for i in colname:
+		d.append(data[i])
+	u_ij, inv_ij = np.unique(data[h[1:]], return_inverse=True)
+	totals=np.zeros(len(u_ij))
+	arr=np.zeros(len(u_ij))
+	for i in inv_ij:
+		arr[i] = arr[i] + 1
+	np.add.at(totals, inv_ij, data[h[0]])
+	for i in range(len(totals)):
+		totals[i] = totals[i]/arr[i]
+	flat_list = [item for sublist in u_ij for item in sublist]
+	flat_list=np.array(flat_list)
+	tab = rfn.merge_arrays((totals,u_ij),flatten=True)
+	table = tabulate(tab, h, tablefmt="fancy_grid")
+	print(table)
+	return tab
 
 def countGroup(table_name, colname):
     data=table_name
@@ -747,30 +913,17 @@ def countGroup(table_name, colname):
     totals=np.zeros(len(u_ij))
     for i in inv_ij:
         totals[i] = totals[i] + 1
-    flat_list = [item for sublist in u_ij for item in sublist]
-    tab = [totals,flat_list]
-    t_matrix = zip(*tab)
-    t = [h,t_matrix]
-    to_return = [totals,u_ij]
-    table = tabulate(t_matrix, h, tablefmt="fancy_grid")
+	flat_list = [item for sublist in u_ij for item in sublist]
+	flat_list=np.array(flat_list)
+    tab = rfn.merge_arrays((totals,u_ij),flatten=True)
+    # t = [h,t_matrix]
+    # to_return = [totals,u_ij]
+    table = tabulate(tab, h, tablefmt="fancy_grid")
     print(table) 
-    return table
+    return tab
 
-# def avgGroup(filename,*colname):
-# 	head,data=importfile(filename)
-# 	s=colname[0]
-# 	h=[]
-# 	d=[]
-# 	for i in colname:
-# 		h.append(i)
-# 		d.append(data[i])
-# 	t_matrix = zip(*d)
-# 	np.array([(k, np.array(list(g), dtype=data[h].dtype).view(np.recarray)[h[0]].mean())
-#           for k, g in groupby(np.sort(data[h], order=h[0]).view(np.recarray),
-#                               itemgetter(h[0]))], dtype=data[h].dtype)
-
-def getSum(filename,colname):
-	head,data=importfile(filename)
+def getSum(tablename,colname):
+	data=tablename
 	s=np.sum(data[colname])
 	print(s)
 	return s
@@ -784,43 +937,32 @@ def sumGroup(table_name, colname):
 	np.add.at(totals, inv_ij, data[h[0]])
 	l = data[colname].dtype
 	flat_list = [item for sublist in u_ij for item in sublist]
-	tab = np.array([totals,flat_list])
-	t_matrix = zip(*tab)
-	# np.rec.fromarrays(t_matrix.transpose(), dtype=l)
-	# new_array = np.core.records.fromrecords(t_matrix,
-    #                                     names='qty,pricerange',
-    #                                     formats='<i8,S10')
-	# v1 = np.array(t_matrix, dtype=l)
-	# a[['x','y']].dtype
-	# print(data[colname].dtype)
-	# ll= np.array(t_matrix)
-	# np.array([tuple(x) for x in ll],dtype=l)
-	# new_array = np.array(t_matrix)
-	# print(new_array)
-	table = tabulate(t_matrix, h, tablefmt="fancy_grid")
+	flat_list=np.array(flat_list)
+	tab = rfn.merge_arrays((totals,u_ij),flatten=True)
+	table = tabulate(tab, h, tablefmt="fancy_grid")
 	print(table)
-	return totals
+	return tab
 
 def concat(table_name1,table_name2):
-    data1=table_name1
-    data2=table_name2
-    c = np.ma.concatenate((data1, data2), axis=None)
-    t_matrix = zip(*c)
+	data1=table_name1
+	data2=table_name2
+	c = np.ma.concatenate((data1, data2), axis=None)
+	t_matrix = zip(*c)
     # tabulate data
-    table = tabulate(c, tablefmt="fancy_grid")
-    print (table)
-    return table
-
-# def getGroupBy(filename,*colname):
-# 	head,data=importfile(filename)
-# 	np.groupby()
-
-#sumgroup, avggroup, moving avg, moving sum, group by, join
+	h = data1.dtype.names
+	headers = []
+	for i in h:
+		headers.append(i)
+	table = tabulate(c, headers,tablefmt="fancy_grid")
+	print(table)
+	print(c)
+	return c
 
 
 if __name__ == "__main__":
 	table={}
 	st = ""
+	print("DATABASE PROJECT:\nThis program supports the following functionalities\n \n1.inputfromfile\n2.outputtofile")
 	print("Enter quit to exit")
 	while(st!="quit"):
 		st = raw_input()
@@ -828,6 +970,7 @@ if __name__ == "__main__":
 		params = [x.strip(' ') for x in params]
 		#call function
 		if(st.startswith("Hash")):
+			start_time = time.time()
 			res = st.replace("Hash","")
 			res=res.strip('[,()]').split(',')
 			table_name=res[0]
@@ -835,7 +978,12 @@ if __name__ == "__main__":
 			col_name=res[1]
 			d=Hash(table_name,col_name)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
+
 		elif(st.startswith("Btree")):
+			start_time = time.time()
 			res = st.replace("Btree","")
 			res=res.strip('[,()]').split(',')
 			table_name=res[0]
@@ -843,12 +991,22 @@ if __name__ == "__main__":
 			col_name=res[1]
 			d=Btree(table_name,col_name)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
+
 		elif(st.find("inputfromfile")!=-1):
+			start_time = time.time()
 			p = params[1]
-			filename = p[p.find('(')+1:p.find(')')]+".txt"
+			filename = p[p.find('(')+1:p.find(')')]
 			d=importfile(filename)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
+
 		elif(params[1].startswith("select")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('select', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -859,8 +1017,12 @@ if __name__ == "__main__":
 			table_name = table[final_args[0]]
 			d=getSelect(table_name,final_args[1:])
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("project")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('project', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -872,8 +1034,29 @@ if __name__ == "__main__":
 			column_names = final_args[1:]
 			d=projection(table_name,column_names)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
+		elif(params[1].startswith("avggroup")):
+			start_time = time.time()
+			p = params[1:]
+			res = [sub.replace('avggroup', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			final_args = [x.strip(' ') for x in final_args]
+			table_name = table[final_args[0]]
+			column_names = final_args[1:]
+			d=avgGroup(table_name,column_names)
+			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
+		
 		elif(params[1].startswith("avg")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('avg', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -885,8 +1068,12 @@ if __name__ == "__main__":
 			column_names = final_args[1:]
 			d=getAverage(table_name,column_names[0])
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("sumgroup")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('sumgroup', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -898,7 +1085,12 @@ if __name__ == "__main__":
 			column_names = final_args[1:]
 			d=sumGroup(table_name,column_names)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
+
 		elif(params[1].startswith("join")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('join', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -911,17 +1103,12 @@ if __name__ == "__main__":
 			args = final_args[2:]
 			d=getJoin(table_name1,table_name2,args)
 			table[params[0]]=d
-
-		# # elif(params[2].startswith("avggroup")):
-		# # 	p = params[2:]
-		# # 	table_name = table[(p[0].split('('))[1].split(',')[0]]
-		# # 	args = params[3:]
-		# # 	final_args = [j.strip('[,()]') for j in args]
-		# # 	final_args = [i for i in final_args if i] 
-		# # 	d=avgGroup(table_name[1],final_args)
-		# # 	table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("movavg")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('movavg', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -933,8 +1120,12 @@ if __name__ == "__main__":
 			table_name = table[final_args[0]]
 			d=moving_average(table_name,final_args[1:length-1],final_args[length-1])
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("movsum")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('movsum', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -946,8 +1137,12 @@ if __name__ == "__main__":
 			table_name = table[final_args[0]]
 			d=moving_sum(table_name,final_args[1:length-1],final_args[length-1])
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("sort")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('sort', "") for sub in p] 
 			stripped_list = [j.split(',') for j in res]
@@ -957,8 +1152,13 @@ if __name__ == "__main__":
 			final_args = [x.strip(' ') for x in final_args]
 			table_name = table[final_args[0]]
 			d=sortColumns(table_name,final_args[1:])
+			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
 		elif(params[1].startswith("countgroup")):
+			start_time = time.time()
 			p = params[1:]
 			res = [sub.replace('countgroup', "") for sub in p]
 			stripped_list = [j.split(',') for j in res]
@@ -968,41 +1168,42 @@ if __name__ == "__main__":
 			final_args = [x.strip(' ') for x in final_args]
 			table_name = table[final_args[0]]
 			column_names = final_args[1:]
-			d=countGroup(table_name,column_names)
+			d=countGroup(table_name,final_args[1:])
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 			
-		elif(params[1].startswith("count")):
-			p = params[1]
-			table_name = table[p[p.find('(')+1:p.find(')')]]
-			d = getCount(table_name)
-			print(d)
+		elif(params[1].startswith("count(")):
+			start_time = time.time()
+			p = params[1:]
+			res = [sub.replace('count', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			final_args = [x.strip(' ') for x in final_args]
+			table_name = table[final_args[0]]
+			column_names = final_args[1:]
+			d=getCount(table_name)
 			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)
 
-		# elif(st.find("Btree")!=-1):
-		# 	p = params[2]
-		# 	table_name = table[p[p.find('(')+1:].strip(',')]
-		# 	column = params[3]
-		# 	d=Btree(table_name,column)
-		# 	table[params[0]]=d
-
-		
-			# d=Hash(table_name,column)
-			# table[params[0]]=d
-		
-
-
-#    head,data=importfile('sampledata.txt')
-#    sortColumns('sampledata.txt','qty')
-#    getAverage('sampledata.txt','qty')
-#    projection('sampledata.txt','qty','saleid','itemid')
-#    getSum('sampledata.txt','qty')
-#    select('sampledata.txt','qty=5')
-#    sumGroup('sampledata.txt','qty','pricerange')
-#    moving_average('sampledata.txt','qty',3)
-#    moving_sum('sampledata.txt','qty',3)
-# #    parseSelect('(time > 50) or (qty < 30)')
-#    Hash(data,'itemid') 
-#    Hash(data,'qty')
-#    head1,data1=importfile('datasample.txt')
-#    Hash(data1,'Q')
-
+		elif(params[1].startswith("concat")):
+			start_time = time.time()
+			p = params[1:]
+			res = [sub.replace('concat', "") for sub in p] 
+			stripped_list = [j.split(',') for j in res]
+			final_args = [[x.strip('[,()]') for x in l] for l in stripped_list]
+			final_args = [[i for i in l if i] for l in final_args] 
+			final_args = [j for sub in final_args for j in sub]
+			final_args = [x.strip(' ') for x in final_args]
+			table_name1 = table[final_args[0]]
+			table_name2 = table[final_args[1]]
+			d=concat(table_name1,table_name2)
+			table[params[0]]=d
+			total_time = time.time() - start_time
+			print("time:")
+			print(total_time)

@@ -20,7 +20,7 @@ All intermediate results are stored in a hashmap, table{ }
 
 Following is a description of each function
 
-inputfromfile: Takes the filename and stores the information in a tabular format.
+inputfromfile: Takes the filename and stores the information in an array table.
 
 average: Takes a table and column name and returns the average of that column.
 
@@ -28,25 +28,18 @@ sum: Takes a table and column name and returns the sum of that column.
 
 count: Takes a table and column name and returns the count of that column.
 
-averageGroup: Takes the table name as the first parameter, performs the aggregate
-functionality on the next single attribute passed to the function grouped by all the rest
-attributes.
+averageGroup: Takes the table name as the first parameter, performs the aggregate average on the next single attribute passed to the function grouped by all the rest attributes.
 
-sumGroup:  Takes the table name as the first parameter, performs the aggregate
-functionality on the next single attribute passed to the function grouped by all the rest
-attributes.
+sumGroup:  Takes the table name as the first parameter, performs the aggregate sum on the next single attribute passed to the function grouped by all the rest attributes.
 
-countGroup: Takes the table name as the first parameter, performs the aggregate
-functionality on the next single attribute passed to the function grouped by all the rest
-attributes.
+countGroup: Takes the table name as the first parameter, performs the aggregate count on the next single attribute passed to the function grouped by all the rest attributes.
 
-movingAvg: Takes a table, an attribute and a constant k as it parameters. K-way moving aggregate of the attribute is returned.
+movingAvg: Takes a table, an attribute and a constant k as it parameters. K-way moving average of the attribute is returned.
 
-movingSum: Takes a table, an attribute and a constant k as it parameters. K-way moving aggregate of the attribute is returned.
+movingSum: Takes a table, an attribute and a constant k as it parameters. K-way moving sum of the attribute is returned.
 
 select: Takes the table name and column names along with some condition and displays the result based on the condition given.
-This method supports select with multiple ands (with and without arithmetic operation on columns), 
-select with multiple or (with and without arithmetic operation on columns)  select with just one codition
+This method supports select with multiple ands (with and without arithmetic operation on columns), select with multiple or (with and without arithmetic operation on columns)  select with just one codition
 
 project: Takes the table name and columns as parameters and returns a table with the column
 

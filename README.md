@@ -12,12 +12,13 @@ This project supports the following functionalities:
 10.select 
 11.project 
 12.join
+13.outputtofile
 
 The user can enter the the name of the functions to get the required queries.
 Once executed the time taken for the query to be executed will be displayed.
 
 All intermediate results are stored in a hashmap, table{ }
-
+All intermediate results are stored in the outputfile - finalOutputFile
 Following is a description of each function
 
 inputfromfile: Takes the filename and stores the information in an array table.
@@ -46,6 +47,8 @@ project: Takes the table name and columns as parameters and returns a table with
 join: Takes two tables and joins them based on a contions.  This method supports join with multiple ands 
 (with and without arithmetic operation on columns), join with multiple or (with and without arithmetic operation on columns) 
 join with just one codition
+
+outputtofile: Takes a table and the name of a file and stores it in the required file.
 
 Example Usage: 
 Enter the query: R := inputfromfile(sales1)

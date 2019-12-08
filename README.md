@@ -16,7 +16,7 @@ This project supports the following functionalities:
 The user can enter the the name of the functions to get the required queries.
 Once executed the time taken for the query to be executed will be displayed.
 
-All intermediate results are stored in a hashmap, table{}
+All intermediate results are stored in a hashmap, table{ }
 
 Following is a description of each function
 

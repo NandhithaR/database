@@ -1,21 +1,38 @@
 # database project
 This project supports the following functionalities:
+
 1.inputfromfile 
+
 2.average 
+
 3.sum 
+
 4.count 
+
 5.averageGroup 
+
 6.sumGroup 
+
 7.countGroup 
+
 8.movingAvg 
+
 9.movingSum 
+
 10.select 
+
 11.project 
+
 12.join
+
 13.Hash
+
 14.Btree
+
 15.outputtofile
+
 16.sort
+
 17.concat
 
 The user can enter the the name of the functions to get the required queries.

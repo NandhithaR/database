@@ -1,17 +1,17 @@
 # database project
 This project supports the following functionalities:
-\n1.inputfromfile
-\n2.average
-\n3.sum
-\n4.count
-\n5.averageGroup
-\n6.sumGroup
-\n7.countGroup
-\n8.movingAvg
-\n9.movingSum
-\n10.select
-\n11.project
-\n12.join
+1.inputfromfile 
+2.average 
+3.sum 
+4.count 
+5.averageGroup 
+6.sumGroup 
+7.countGroup 
+8.movingAvg 
+9.movingSum 
+10.select 
+11.project 
+12.join
 
 The user can enter the the name of the functions to get the required queries.
 Once executed the time taken for the query to be executed will be displayed.
